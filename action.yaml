@@ -127,7 +127,7 @@ runs:
         # Make the input template available as a file for the next step
         echo "${{ inputs.messageTemplate }}" > "$working_directory/template.md.j2"
         echo "In template:"
-        cat "working_directory/template.md.j2"
+        cat "$working_directory/template.md.j2"
 
     - name: Create container build summary
       uses: cuchi/jinja2-action@v1.3.0
