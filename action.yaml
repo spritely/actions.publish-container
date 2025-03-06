@@ -106,7 +106,7 @@ runs:
               --arg owner "$owner" \
               --arg repo "$repo" \
               --arg registry "${{ inputs.registryHost }}" \
-              --argjson metadata "${{ steps.containerMetadata.outputs.json }}" \
+              --argjson metadata '${{ steps.containerMetadata.outputs.json }}' \
               '{
                 "version": $version,
                 "owner": $owner,
