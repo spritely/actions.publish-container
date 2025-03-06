@@ -93,6 +93,10 @@ runs:
       name: Create JSON metadata object
       shell: bash
       run: |
+        # Create a dedicated directory for our action files
+        working_directory="${{ github.workspace }}/.actions.publish-container"
+        mkdir -p "$working_directory"
+
         # Parse imageNames into a proper JSON array using jq
         images=$(echo '${{ toJSON(inputs.imageNames) }}' | jq 'split("\n") | map(select(length > 0))')
 
@@ -115,27 +119,25 @@ runs:
                 "images": $images,
                 "tags": $metadata.tags,
                 "labels": $metadata.labels
-              }' > "${{ runner.temp }}/metadata.json"
-
-        echo "Runner temp directory: ${{ runner.temp }}"
+              }' > "$working_directory/metadata.json"
 
         echo "Using template data:"
-        cat "${{ runner.temp }}/metadata.json"
+        cat "$working_directory/metadata.json"
 
         # Make the input template available as a file for the next step
-        echo "${{ inputs.messageTemplate }}" > "${{ runner.temp }}/template.md.j2"
+        echo "${{ inputs.messageTemplate }}" > "$working_directory/template.md.j2"
         echo "In template:"
-        cat "${{ runner.temp }}/template.md.j2"
+        cat "working_directory/template.md.j2"
 
     - name: Create container build summary
       uses: cuchi/jinja2-action@v1.3.0
       with:
-        template: ${{ runner.temp }}/template.md.j2
-        output_file: ${{ runner.temp }}/output.md
-        data_file: ${{ runner.temp }}/metadata.json
+        template: ${{ github.workspace }}/.actions.publish-container/template.md.j2
+        output_file: ${{ github.workspace }}/.actions.publish-container/output.md
+        data_file: ${{ github.workspace }}/.actions.publish-container/metadata.json
         data_format: json
 
     - name: Write summary to GitHub
       shell: bash
       run: |
-        cat "${{ runner.temp }}/output.md" >> $GITHUB_STEP_SUMMARY
+        cat "${{ github.workspace }}/.actions.publish-container/output.md" >> $GITHUB_STEP_SUMMARY
