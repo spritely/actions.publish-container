@@ -91,7 +91,6 @@ runs:
 
     - id: resultMetadata
       name: Create JSON metadata object
-      working-directory: ${{ runner.temp }}
       shell: bash
       run: |
         # Parse imageNames into a proper JSON array using jq
@@ -116,13 +115,15 @@ runs:
                 "images": $images,
                 "tags": $metadata.tags,
                 "labels": $metadata.labels
-              }' > metadata.json
+              }' > ${{ runner.temp }}/metadata.json
 
-        echo "Template data:"
-        cat metadata.json
+        echo "Using template data:"
+        cat ${{ runner.temp }}/metadata.json
 
         # Make the input template available as a file for the next step
-        echo '${{ inputs.messageTemplate }}' > template.md.j2
+        echo '${{ inputs.messageTemplate }}' > ${{ runner.temp }}/template.md.j2
+        echo "In template:"
+        cat ${{ runner.temp }}/template.md.j2
 
     - name: Create container build summary
       uses: cuchi/jinja2-action@v1.3.0
