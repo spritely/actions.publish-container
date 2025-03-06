@@ -22,11 +22,11 @@ inputs:
     required: false
     default: ""
   context:
-    description: The context to use when building. Defaults to ${{ github.workspace }}
+    description: The context to use when building.
     required: false
     default: ${{ github.workspace }}
   dockerfile:
-    description: The dockerfile to build. Defaults to ${{ github.workspace }}/Dockerfile
+    description: The dockerfile to build.
     required: false
     default: ${{ github.workspace }}/Dockerfile
   messageTemplate:
