@@ -98,7 +98,7 @@ runs:
 
         repository="${{ github.repository }}"
         owner="${repository%%/*}"
-        repo=${repository#*/}
+        repo="${repository#*/}"
 
         # Create input data JSON for template
         jq -n --argjson images "$images" \
@@ -106,7 +106,7 @@ runs:
               --arg owner "$owner" \
               --arg repo "$repo" \
               --arg registry "${{ inputs.registryHost }}" \
-              --argjson metadata '${{ steps.containerMetadata.outputs.json }}' \
+              --argjson metadata "${{ steps.containerMetadata.outputs.json }}" \
               '{
                 "version": $version,
                 "owner": $owner,
@@ -115,15 +115,17 @@ runs:
                 "images": $images,
                 "tags": $metadata.tags,
                 "labels": $metadata.labels
-              }' > ${{ runner.temp }}/metadata.json
+              }' > "${{ runner.temp }}/metadata.json"
+
+        echo "Runner temp directory: ${{ runner.temp }}"
 
         echo "Using template data:"
-        cat ${{ runner.temp }}/metadata.json
+        cat "${{ runner.temp }}/metadata.json"
 
         # Make the input template available as a file for the next step
-        echo '${{ inputs.messageTemplate }}' > ${{ runner.temp }}/template.md.j2
+        echo "${{ inputs.messageTemplate }}" > "${{ runner.temp }}/template.md.j2"
         echo "In template:"
-        cat ${{ runner.temp }}/template.md.j2
+        cat "${{ runner.temp }}/template.md.j2"
 
     - name: Create container build summary
       uses: cuchi/jinja2-action@v1.3.0
@@ -136,4 +138,4 @@ runs:
     - name: Write summary to GitHub
       shell: bash
       run: |
-        cat ${{ runner.temp }}/output.md >> $GITHUB_STEP_SUMMARY
+        cat "${{ runner.temp }}/output.md" >> $GITHUB_STEP_SUMMARY
