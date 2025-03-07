@@ -15,7 +15,7 @@ services:
       - REGISTRY_AUTH_HTPASSWD_REALM=Registry Realm
       - REGISTRY_AUTH_HTPASSWD_PATH=/auth/htpasswd
     volumes:
-      - ../tests/htpasswd:/auth/htpasswd
+      - ../tests/auth:/auth
 
   actions-publish-container-dev:
     container_name: actions-publish-container-dev
