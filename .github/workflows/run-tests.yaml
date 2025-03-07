@@ -23,7 +23,7 @@ jobs:
         run: |
           # Wait for registry to be ready
           for i in {1..10}; do
-            if curl -u testuser:testpassword http://localhost:5000/v2/ > /dev/null 2>&1; then
+            if curl -u testuser:testpassword http://registry:5000/v2/ > /dev/null 2>&1; then
               echo "Registry is running"
               break
             fi
