@@ -4,15 +4,6 @@ description: Basic test for the publish-container action
 runs:
   using: composite
   steps:
-    - name: Checkout repository
-      uses: actions/checkout@v4
-
-    - name: Set up test environment
-      shell: bash
-      run: |
-        echo "Setting up basic test environment"
-        echo "Test version: 1.0.0" >> $GITHUB_ENV
-
     - name: Create test Dockerfile
       shell: bash
       run: |
