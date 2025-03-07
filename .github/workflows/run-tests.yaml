@@ -18,6 +18,7 @@ jobs:
           echo "\nRegistry is running"
 
   basic-test:
+    name: Basic test
     needs: setup-container-registry
     runs-on: ubuntu-24.04
     steps:
