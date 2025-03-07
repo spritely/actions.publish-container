@@ -3,33 +3,17 @@ name: Run Publish Container Tests
 on: [push, workflow_dispatch]
 
 jobs:
-  setup-container-registry:
-    name: Setup container registry
-    runs-on: ubuntu-24.04
-    services:
-      registry:
-        image: registry:2
-        ports:
-          - 5000:5000
-        env:
-          REGISTRY_AUTH: htpasswd
-          REGISTRY_AUTH_HTPASSWD_REALM: Registry Realm
-          REGISTRY_AUTH_HTPASSWD_PATH: /auth/htpasswd
-        volumes:
-          - ${{ github.workspace }}/tests/auth:/auth
-    steps:
-      - name: Validate container registry is running
-        run: |
-          curl -u testuser:testpassword http://localhost:5000/v2/ || exit 1
-          echo "\nRegistry is running"
-
   basic-test:
     name: Basic test
-    needs: setup-container-registry
     runs-on: ubuntu-24.04
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Run basic test
-        uses: ./tests/basic-test
+      - name: Run tests
+        uses: devcontainers/ci@v0.3
+        with:
+          runCmd: |
+            wget --quiet --user=testuser --password=testpassword -O - http://actions-publish-container-contner-registry:5000/v2/ || exit 1
+            echo "\nRegistry is running"
+          push: never
