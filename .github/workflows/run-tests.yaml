@@ -20,6 +20,11 @@ jobs:
         uses: devcontainers/ci@v0.3
         with:
           runCmd: |
-            wget --quiet --user=testuser --password=testpassword -O - http://actions-publish-container-contner-registry:5000/v2/ || exit 1
-            echo "\nRegistry is running"
+            wget --quiet --user=testuser --password=testpassword -O - http://actions-publish-container-contner-registry:5000/v2/
+            if [ $? -eq 0 ]; then
+              echo "\nContainer registry is running"
+            else
+              echo "\n Container registry failed to start or is not accessible"
+              return 1
+            fi
           push: never
