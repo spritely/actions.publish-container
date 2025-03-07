@@ -7,10 +7,10 @@ runs:
     - name: Run publish-container action
       uses: ./
       with:
-        registryHost: host.docker.internal:5000
+        registryHost: http://localhost:5000
         registryUsername: testuser
         registryPassword: testpassword
-        imageNames: host.docker.internal:5000/test-image
+        imageNames: localhost:5000/test-image
         version: 1.0.0
         context: tests/basic-test
         dockerfile: tests/basic-test/Dockerfile
