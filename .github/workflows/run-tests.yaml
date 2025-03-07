@@ -6,25 +6,53 @@ jobs:
   basic-test:
     name: Basic test
     runs-on: ubuntu-24.04
+    services:
+      registry:
+        image: registry:2
+        ports:
+          - 5000:5000
+        env:
+          REGISTRY_AUTH: htpasswd
+          REGISTRY_AUTH_HTPASSWD_REALM: Registry Realm
+          REGISTRY_AUTH_HTPASSWD_PATH: /auth/htpasswd
+        volumes:
+          - ${{ github.workspace }}/tests/auth:/auth
+
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Create .env for build
-        shell: bash
+      - name: Validate container registry is running
         run: |
-          cat > ./.devcontainer/.env <<EOF
-          EOF
-
-      - name: Run tests
-        uses: devcontainers/ci@v0.3
-        with:
-          runCmd: |
-            wget --user=testuser --password=testpassword -O - http://actions-publish-container-container-registry:5000/v2/
-            if [ $? -eq 0 ]; then
-              echo "Container registry is running"
-            else
-              echo "Container registry failed to start or is not accessible"
+          # Wait for registry to be ready
+          for i in {1..10}; do
+            if curl -u testuser:testpassword http://localhost:5000/v2/ > /dev/null 2>&1; then
+              echo "Registry is running"
+              break
+            fi
+            echo "Waiting for registry... $i"
+            sleep 3
+            if [ $i -eq 10 ]; then
+              echo "Registry failed to start"
               exit 1
             fi
-          push: never
+          done
+
+      # - name: Create .env for build
+      #   shell: bash
+      #   run: |
+      #     cat > ./.devcontainer/.env <<EOF
+      #     EOF
+
+      # - name: Run tests
+      #   uses: devcontainers/ci@v0.3
+      #   with:
+      #     runCmd: |
+      #       wget --user=testuser --password=testpassword -O - http://actions-publish-container-container-registry:5000/v2/
+      #       if [ $? -eq 0 ]; then
+      #         echo "Container registry is running"
+      #       else
+      #         echo "Container registry failed to start or is not accessible"
+      #         exit 1
+      #       fi
+      #     push: never
