@@ -6,21 +6,18 @@ jobs:
   basic-test:
     name: Basic test
     runs-on: ubuntu-24.04
-    services:
-      registry:
-        image: registry:2
-        ports:
-          - 5000:5000
-        env:
-          REGISTRY_AUTH: htpasswd
-          REGISTRY_AUTH_HTPASSWD_REALM: Registry Realm
-          REGISTRY_AUTH_HTPASSWD_PATH: /auth/htpasswd
-        volumes:
-          - ${{ github.workspace }}/tests/auth:/auth
-
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
+
+      - name: Start container registry
+        run: |
+          docker run -d -p 5000:5000 \
+            -v ${{ github.workspace }}/tests/auth:/auth \
+            -e REGISTRY_AUTH=htpasswd \
+            -e REGISTRY_AUTH_HTPASSWD_REALM="Registry Realm" \
+            -e REGISTRY_AUTH_HTPASSWD_PATH=/auth/htpasswd \
+            --name registry registry:2
 
       - name: Validate container registry is running
         run: |
