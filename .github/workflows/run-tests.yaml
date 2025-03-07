@@ -16,13 +16,8 @@ jobs:
           REGISTRY_AUTH_HTPASSWD_REALM: Registry Realm
           REGISTRY_AUTH_HTPASSWD_PATH: /auth/htpasswd
         volumes:
-          - ${{ github.workspace }}/auth:/auth
+          - ${{ github.workspace }}/tests/auth:/auth
     steps:
-      - name: Setup container registry auth
-        run: |
-          mkdir -p auth
-          htpasswd -Bbn testuser testpassword > auth/htpasswd
-
       - name: Validate container registry is running
         run: |
           curl -u testuser:testpassword http://localhost:5000/v2/ || exit 1
