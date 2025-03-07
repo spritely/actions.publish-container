@@ -17,8 +17,8 @@ runs:
       uses: ./
       with:
         registryHost: localhost:5000
-        registryUsername: ""
-        registryPassword: ""
+        registryUsername: testuser
+        registryPassword: testpassword
         imageNames: localhost:5000/test-image
         version: 1.0.0
 
