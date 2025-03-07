@@ -1,0 +1,27 @@
+name: Run Publish Container Tests
+
+on: [push, workflow_dispatch]
+
+jobs:
+  setup-test-registry:
+    runs-on: ubuntu-latest
+    services:
+      registry:
+        image: registry:2
+        ports:
+          - 5000:5000
+    steps:
+      - name: Check registry is running
+        run: |
+          curl http://localhost:5000/v2/ || exit 1
+          echo "Registry is running"
+
+  basic-test:
+    needs: setup-test-registry
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Run basic test
+        uses: ./tests/basic-test
