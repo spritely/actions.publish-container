@@ -4,15 +4,6 @@ description: Basic test for the publish-container action
 runs:
   using: composite
   steps:
-    - name: Create test Dockerfile
-      shell: bash
-      run: |
-        cat > ${{ github.workspace }}/tests/basic-test/Dockerfile << 'EOF'
-        FROM alpine:latest
-        RUN echo "This is a test container" > /test.txt
-        CMD ["cat", "/test.txt"]
-        EOF
-
     - name: Run publish-container action
       uses: ./
       with:
@@ -21,6 +12,8 @@ runs:
         registryPassword: testpassword
         imageNames: localhost:5000/test-image
         version: 1.0.0
+        context: tests/basic-test
+        dockerfile: tests/basic-test/Dockerfile
 
     - name: Verify results
       shell: bash
