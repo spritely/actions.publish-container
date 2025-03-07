@@ -139,7 +139,12 @@ runs:
         data_file: ${{ github.workspace }}/.actions.publish-container/metadata.json
         data_format: json
 
-    - name: Write summary to GitHub
+    - id: summary
+      name: Write summary to GitHub
       shell: bash
       run: |
-        cat "${{ github.workspace }}/.actions.publish-container/output.md" >> $GITHUB_STEP_SUMMARY
+        # Export results
+        echo "summary=$(cat "${{ github.workspace }}/.actions.publish-container/output.md")" >> $GITHUB_OUTPUT
+
+         # Display results in GitHub
+        echo "$summary" >> $GITHUB_STEP_SUMMARY
