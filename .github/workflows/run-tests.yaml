@@ -10,6 +10,12 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
+      - name: Create .env for build
+        shell: bash
+        run: |
+          cat > ./.devcontainer/.env <<EOF
+          EOF
+
       - name: Run tests
         uses: devcontainers/ci@v0.3
         with:
