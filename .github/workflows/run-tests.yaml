@@ -3,8 +3,8 @@ name: Run Publish Container Tests
 on: [push, workflow_dispatch]
 
 jobs:
-  basic-test:
-    name: Basic test
+  run-tests:
+    name: Run tests
     runs-on: ubuntu-24.04
     steps:
       - name: Checkout repository
@@ -35,21 +35,5 @@ jobs:
             fi
           done
 
-      # - name: Create .env for build
-      #   shell: bash
-      #   run: |
-      #     cat > ./.devcontainer/.env <<EOF
-      #     EOF
-
-      # - name: Run tests
-      #   uses: devcontainers/ci@v0.3
-      #   with:
-      #     runCmd: |
-      #       wget --user=testuser --password=testpassword -O - http://actions-publish-container-container-registry:5000/v2/
-      #       if [ $? -eq 0 ]; then
-      #         echo "Container registry is running"
-      #       else
-      #         echo "Container registry failed to start or is not accessible"
-      #         exit 1
-      #       fi
-      #     push: never
+      - name: Run basic test
+        uses: ./tests/basic-test
