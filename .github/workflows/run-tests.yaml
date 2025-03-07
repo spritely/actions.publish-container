@@ -21,7 +21,6 @@ jobs:
 
       - name: Validate container registry is running
         run: |
-          docker ps
           # Wait for registry to be ready
           for i in {1..10}; do
             if curl -u testuser:testpassword http://localhost:5000/v2/ > /dev/null 2>&1; then
