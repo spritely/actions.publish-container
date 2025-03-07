@@ -22,9 +22,9 @@ jobs:
           runCmd: |
             wget --quiet --user=testuser --password=testpassword -O - http://actions-publish-container-contner-registry:5000/v2/
             if [ $? -eq 0 ]; then
-              echo "\nContainer registry is running"
+              echo "Container registry is running"
             else
-              echo "\n Container registry failed to start or is not accessible"
-              return 1
+              echo "Container registry failed to start or is not accessible"
+              exit 1
             fi
           push: never
