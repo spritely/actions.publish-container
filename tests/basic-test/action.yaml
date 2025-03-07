@@ -1,10 +1,10 @@
-name: Basic Publish Container Test
-description: Basic test for the publish-container action
+name: Publish container publishes expected container
 
 runs:
   using: composite
   steps:
-    - name: Run publish-container action
+    - id: publish
+      name: Run publish-container action
       uses: ./
       with:
         registryHost: localhost:5000
@@ -15,10 +15,58 @@ runs:
         context: tests/basic-test
         dockerfile: tests/basic-test/Dockerfile
 
-    - name: Verify results
+    - name: Assert contains expected tags
       shell: bash
       run: |
-        echo "Verifying basic test results"
-        # Here we would add verification logic
-        # For now, just report success
-        echo "Basic test passed!"
+        echo "Verifying image tags..."
+
+        TAGS=$(curl -s -u testuser:testpassword http://localhost:5000/v2/test-image/tags/list | jq -r '.tags[]')
+        
+        # Check for specific version tags
+        for TAG in "1.0.0" "1.0" "1"; do
+          if echo "$TAGS" | grep -q "$TAG"; then
+            echo "✅ Found expected tag: $TAG"
+          else
+            echo "❌ Missing expected tag: $TAG"
+            exit 1
+          fi
+        done
+        
+    - name: Assert container was published with correct labels
+      shell: bash
+      run: |
+        echo "Pulling image to verify content..."
+        docker pull localhost:5000/test-image:1.0.0
+        
+        # Test that the container runs and contains the expected content
+        OUTPUT=$(docker run --rm localhost:5000/test-image:1.0.0)
+        if [ "$OUTPUT" = "This is a test container" ]; then
+          echo "✅ Container runs correctly with expected output"
+        else
+          echo "❌ Container output does not match expected: $OUTPUT"
+          exit 1
+        fi
+        
+        # Verify label was applied
+        LABEL=$(docker inspect localhost:5000/test-image:1.0.0 | jq -r '.[0].Config.Labels["test.label"]')
+        if [ "$LABEL" = "test-value" ]; then
+          echo "✅ Container has expected label"
+        else
+          echo "❌ Container missing expected label: $LABEL"
+          exit 1
+        fi
+        
+    - name: Assert output includes summary
+      shell: bash
+      run: |
+        echo "Verifying action summary output..."
+        
+        if [ -n "${{ steps.publish.outputs.summary }}" ]; then
+          echo "✅ Summary output exists"
+          echo "Summary: ${{ steps.publish.outputs.summary }}"
+        else
+          echo "❌ Missing summary output"
+          exit 1
+        fi
+        
+        echo "All assertions passed successfully! ✅"
