@@ -19,21 +19,5 @@ jobs:
             -e REGISTRY_AUTH_HTPASSWD_PATH=/auth/htpasswd \
             --name registry registry:2
 
-      - name: Validate container registry is running
-        run: |
-          # Wait for registry to be ready
-          for i in {1..10}; do
-            if curl -u testuser:testpassword http://localhost:5000/v2/ > /dev/null 2>&1; then
-              echo "Registry is running"
-              break
-            fi
-            echo "Waiting for registry... $i"
-            sleep 3
-            if [ $i -eq 10 ]; then
-              echo "Registry failed to start"
-              exit 1
-            fi
-          done
-
       - name: Run basic test
         uses: ./tests/basic-test
