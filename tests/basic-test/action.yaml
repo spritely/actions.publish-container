@@ -4,13 +4,20 @@ description: Basic test for the publish-container action
 runs:
   using: composite
   steps:
+    - name: Login to GitHub Container Registry
+      uses: docker/login-action@v3
+      with:
+        registry: http://localhost:5000/
+        username: testuser
+        password: testpassword
+
     - name: Run publish-container action
       uses: ./
       with:
-        registryHost: http://registry:5000
+        registryHost: http://localhost:5000/
         registryUsername: testuser
         registryPassword: testpassword
-        imageNames: registry:5000/test-image
+        imageNames: localhost/test-image
         version: 1.0.0
         context: tests/basic-test
         dockerfile: tests/basic-test/Dockerfile
