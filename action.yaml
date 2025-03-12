@@ -127,7 +127,10 @@ runs:
         cat "$working_directory/metadata.json"
 
         # Make the input template available as a file for the next step
-        printf '%s' '${{ inputs.messageTemplate }}' > "$working_directory/template.md.j2"
+        cat > "$working_directory/template.md.j2" << 'TEMPLATE_EOF'
+        ${{ inputs.messageTemplate }}
+        TEMPLATE_EOF
+        
         echo "In template:"
         cat "$working_directory/template.md.j2"
 
