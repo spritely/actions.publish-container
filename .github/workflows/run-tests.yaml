@@ -22,16 +22,16 @@ jobs:
 
       - name: Run test - Publish container publishes expected container
         uses: ./tests/basic-test
-        if: steps.setup-tests.outcome == 'success'
+        if: always() && steps.setup-tests.outcome == 'success'
 
       - name: Run test - Publish container uses provided summary template
         uses: ./tests/custom-template-test
-        if: steps.setup-tests.outcome == 'success'
+        if: always() && steps.setup-tests.outcome == 'success'
 
       - name: Run test - Publish container publishes multiple images
         uses: ./tests/multiple-images-test
-        if: steps.setup-tests.outcome == 'success'
+        if: always() && steps.setup-tests.outcome == 'success'
 
       - name: Run test - Publish container build secrets
         uses: ./tests/secrets-test
-        if: steps.setup-tests.outcome == 'success'
+        if: always() && steps.setup-tests.outcome == 'success'
