@@ -48,7 +48,7 @@ runs:
       shell: bash
       run: |
         label=$(docker inspect localhost:5000/test-image:2.3.4 | jq -r '.[0].Config.Labels["test.label"]')
-        if [ "$label" = "test-value" ]; then
+        if [ "$label" = "basic-test" ]; then
           echo "✅ Container has expected label"
         else
           echo "❌ Container missing expected label: $label"

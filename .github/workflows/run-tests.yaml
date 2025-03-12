@@ -19,5 +19,14 @@ jobs:
             -e REGISTRY_AUTH_HTPASSWD_PATH=/auth/htpasswd \
             --name registry registry:2
 
-      - name: Run basic test
+      - name: Run test - Publish container publishes expected container
         uses: ./tests/basic-test
+
+      - name: Run test - Publish container uses provided summary template
+        uses: ./tests/custom-template-test
+
+      - name: Run test - Publish container publishes multiple images
+        uses: ./tests/multiple-images-test
+
+      - name: Run test - Publish container build secrets
+        uses: ./tests/secrets-test
