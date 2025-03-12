@@ -42,15 +42,17 @@ runs:
 
     - name: Assert custom template was rendered correctly
       shell: bash
+      if: always()
       run: |
         summary="${{ steps.publish.outputs.summary }}"
+        exit_code=0
         
         # Check that the summary includes our custom formatting
         if echo "$summary" | grep -q "🚀 Container Build Results"; then
           echo "✅ Summary includes custom header"
         else
           echo "❌ Summary missing custom header"
-          exit 1
+          exit_code=1
         fi
         
         # Check that version was included
@@ -58,7 +60,7 @@ runs:
           echo "✅ Summary includes version"
         else
           echo "❌ Summary missing version"
-          exit 1
+          exit_code=1
         fi
         
         # Check that the table header was rendered
@@ -66,7 +68,7 @@ runs:
           echo "✅ Summary includes table formatting"
         else
           echo "❌ Summary missing table formatting"
-          exit 1
+          exit_code=1
         fi
         
         # Check that JSON formatting was applied
@@ -74,12 +76,15 @@ runs:
           echo "✅ Summary includes JSON code block"
         else
           echo "❌ Summary missing JSON code block"
-          exit 1
+          exit_code=1
         fi
-        
-    - id: publish_complex
+
+        exit $exit_code
+
+    - id: publishComplex
       name: Run publish-container action with complex template including conditionals
       uses: ./
+      if: always()
       with:
         registryHost: localhost:5000
         registryUsername: testuser
@@ -104,18 +109,20 @@ runs:
           {% endfor %}
           
           ## Tag Count: {{ tags | length }}
-          
+
     - name: Assert complex template with conditionals was rendered correctly
       shell: bash
+      if: always()
       run: |
-        summary="${{ steps.publish_complex.outputs.summary }}"
+        summary="${{ steps.publishComplex.outputs.summary }}"
+        exit_code=0
         
         # Check that conditional was rendered
         if echo "$summary" | grep -q "⚠️ \*\*Beta Release\*\*"; then
           echo "✅ Summary includes conditional beta warning"
         else
           echo "❌ Summary missing conditional beta warning"
-          exit 1
+          exit_code=1
         fi
         
         # Check that the image name conditional was rendered
@@ -123,7 +130,7 @@ runs:
           echo "✅ Summary includes nested conditional text"
         else
           echo "❌ Summary missing nested conditional text"
-          exit 1
+          exit_code=1
         fi
         
         # Check that the filter/function was applied
@@ -131,7 +138,7 @@ runs:
           echo "✅ Summary includes tag count from filter"
         else
           echo "❌ Summary missing tag count from filter"
-          exit 1
+          exit_code=1
         fi
-        
-        echo "All custom template tests passed successfully! ✅"
+
+        exit $exit_code

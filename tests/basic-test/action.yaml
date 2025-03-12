@@ -18,6 +18,7 @@ runs:
 
     - name: Assert contains expected tags
       shell: bash
+      if: always()
       run: |
         tags=$(curl -s -u testuser:testpassword http://localhost:5000/v2/test-image/tags/list | jq -r '.tags[]')
         
@@ -30,9 +31,10 @@ runs:
             exit 1
           fi
         done
-        
+
     - name: Assert container runs
       shell: bash
+      if: always()
       run: |
         docker pull localhost:5000/test-image:2.3.4
         output=$(docker run --rm localhost:5000/test-image:2.3.4)
@@ -46,6 +48,7 @@ runs:
 
     - name: Assert container contains expected labels
       shell: bash
+      if: always()
       run: |
         label=$(docker inspect localhost:5000/test-image:2.3.4 | jq -r '.[0].Config.Labels["test.label"]')
         if [ "$label" = "basic-test" ]; then
@@ -54,23 +57,26 @@ runs:
           echo "❌ Container missing expected label: $label"
           exit 1
         fi
-        
+
     - name: Assert output includes expected information
       shell: bash
+      if: always()
       run: |
         echo "${{ steps.publish.outputs.summary }}"
+        exit_code=0
         
         if [ -n "${{ steps.publish.outputs.summary }}" ]; then
           echo "✅ Summary output exists"
         else
           echo "❌ Missing summary output"
-          exit 1
+          exit_code=1
         fi
         
         if echo "${{ steps.publish.outputs.summary }}" | grep -q "2.3.4"; then
           echo "✅ Summary contains version information"
         else
           echo "❌ Summary missing version information"
-          exit 1
+          exit_code=1
         fi
-
+        
+        exit $exit_code

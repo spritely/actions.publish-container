@@ -9,7 +9,7 @@ runs:
       run: |
         # Create a secret file to be used during build
         echo "This is a test secret" > ${{ github.workspace }}/test_secret.txt
-        
+
     - name: Run publish-container action with secrets
       uses: ./
       with:
@@ -23,9 +23,10 @@ runs:
         containerSecrets: |
           GIT_AUTH_TOKEN=dummy-token
           TEST_SECRET_FILE=${{ github.workspace }}/test_secret.txt
-        
+
     - name: Assert secrets were used during build
       shell: bash
+      if: always()
       run: |
         docker pull localhost:5000/test-secrets:1.0.0
         output=$(docker run --rm localhost:5000/test-secrets:1.0.0)
@@ -45,9 +46,10 @@ runs:
           echo "❌ Container failed to use TEST_SECRET_FILE secret"
           exit 1
         fi
-        
+
     - name: Assert secrets are not leaked in image
       shell: bash
+      if: always()
       run: |
         found_secrets=$(docker run --rm localhost:5000/test-secrets:1.0.0 find / -type f -exec grep -l "This is a test secret" {} \; 2>/dev/null || true)
         
@@ -57,5 +59,3 @@ runs:
           echo "❌ Secret files found in the final image: $found_secrets"
           exit 1
         fi
-        
-        echo "All secret handling tests passed successfully! ✅"
