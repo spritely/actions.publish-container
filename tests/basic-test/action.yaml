@@ -21,6 +21,8 @@ runs:
       if: always()
       run: |
         tags=$(curl -s -u testuser:testpassword http://localhost:5000/v2/test-image/tags/list | jq -r '.tags[]')
+        echo $tags
+        exit_code=0
         
         # Check for specific version tags
         for tag in "2.3.4" "2.3" "2"; do
@@ -28,9 +30,11 @@ runs:
             echo "✅ Found expected tag: $tag"
           else
             echo "❌ Missing expected tag: $tag"
-            exit 1
+            exit_code=1
           fi
         done
+
+        exit $exit_code
 
     - name: Assert container runs
       shell: bash
@@ -38,6 +42,7 @@ runs:
       run: |
         docker pull localhost:5000/test-image:2.3.4
         output=$(docker run --rm localhost:5000/test-image:2.3.4)
+        echo $output
 
         if [ "$output" = "This is a test container" ]; then
           echo "✅ Container runs correctly with expected output"
@@ -51,6 +56,8 @@ runs:
       if: always()
       run: |
         label=$(docker inspect localhost:5000/test-image:2.3.4 | jq -r '.[0].Config.Labels["test.label"]')
+        echo $label
+        
         if [ "$label" = "basic-test" ]; then
           echo "✅ Container has expected label"
         else

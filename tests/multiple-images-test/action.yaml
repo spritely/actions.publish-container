@@ -23,6 +23,8 @@ runs:
       if: always()
       run: |
         tags=$(curl -s -u testuser:testpassword http://localhost:5000/v2/multiple-images-test-1/tags/list | jq -r '.tags[]')
+        echo $tags
+        exit_code=0
         
         # Check for expected version tags
         for tag in "1.0.0" "1.0" "1"; do
@@ -30,15 +32,19 @@ runs:
             echo "✅ First image has expected tag: $tag"
           else
             echo "❌ First image missing expected tag: $tag"
-            exit 1
+            exit_code=1
           fi
         done
+
+        exit $exit_code
 
     - name: Assert second image was published with correct tags
       shell: bash
       if: always()
       run: |
         tags=$(curl -s -u testuser:testpassword http://localhost:5000/v2/multiple-images-test-2/tags/list | jq -r '.tags[]')
+        echo $tags
+        exit_code=0
         
         # Check for expected version tags
         for tag in "1.0.0" "1.0" "1"; do
@@ -46,9 +52,11 @@ runs:
             echo "✅ Second image has expected tag: $tag"
           else
             echo "❌ Second image missing expected tag: $tag"
-            exit 1
+            exit_code=1
           fi
         done
+
+        exit $exit_code
 
     - name: Assert first image runs
       shell: bash
@@ -56,6 +64,7 @@ runs:
       run: |
         docker pull localhost:5000/multiple-images-test-1:1.0.0
         output=$(docker run --rm localhost:5000/multiple-images-test-1:1.0.0)
+        echo $output
         
         if [ "$output" = "This is a test container" ]; then
           echo "✅ First container runs with expected output"
@@ -70,6 +79,7 @@ runs:
       run: |
         docker pull localhost:5000/multiple-images-test-2:1.0.0
         output=$(docker run --rm localhost:5000/multiple-images-test-2:1.0.0)
+        echo $output
         
         if [ "$output" = "This is a test container" ]; then
           echo "✅ Second container runs with expected output"
