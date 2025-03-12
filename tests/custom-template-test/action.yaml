@@ -60,7 +60,7 @@ runs:
         fi
         
         # Check that version was included
-        if echo "$summary" | grep -q "**Version:** 1.0.0"; then
+        if echo "$summary" | grep -q "Version:" | grep -q "1.0.0"; then
           echo "✅ Summary includes version"
         else
           echo "❌ Summary missing version"
