@@ -18,25 +18,25 @@ runs:
         messageTemplate: |-
           ## 🚀 Container Build Results
           
-          **Version:** \{\{ version \}\}
-          **Built by:** \{\{ owner \}\}/\{\{ repo \}\}
+          **Version:** '{{ version }}'
+          **Built by:** '{{ owner }}/{{ repo }}'
           
           ### 📦 Images
-          \{% for image in images %\}
-          - `\{\{ image \}\}` 🔄
-          \{% endfor %\}
+          {% for image in images %}
+          - `{{ image }}` 🔄
+          {% endfor %}
           
           ### 🏷️ Tags
           | Tag | Full Name |
           |-----|-----------|
-          \{% for tag in tags %\}
-          | `\{\{ tag \}\}` | `\{\{ registry \}\}/test-template:\{\{ tag \}\}` |
-          \{% endfor %\}
+          {% for tag in tags %}
+          | `'{{ tag }}'` | `'{{ registry }}/test-template:{{ tag }}'` |
+          {% endfor %}
           
           ### 📋 Metadata
           ```json
           {
-            "labels": \{\{ labels | tojson \}\}
+            "labels": '{{ labels | tojson }}'
           }
           ```
 
