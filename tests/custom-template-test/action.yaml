@@ -45,8 +45,8 @@ runs:
       if: always()
       run: |
         summary=$(cat << 'DELIMITER'
-          ${{ steps.publish.outputs.summary }}
-          DELIMITER
+        ${{ steps.publish.outputs.summary }}
+        DELIMITER
         )
         exit_code=0
         
@@ -118,8 +118,8 @@ runs:
       if: always()
       run: |
         summary=$(cat << 'DELIMITER'
-          ${{ steps.publish.outputs.summary }}
-          DELIMITER
+        ${{ steps.publish.outputs.summary }}
+        DELIMITER
         )
         exit_code=0
         
