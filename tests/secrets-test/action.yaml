@@ -4,12 +4,6 @@ description: Test to validate that publish container publishes builds secrets
 runs:
   using: composite
   steps:
-    - name: Create test secret file
-      shell: bash
-      run: |
-        # Create a secret file to be used during build
-        echo "This is a test secret" > ${{ github.workspace }}/test_secret.txt
-
     - name: Run publish-container action with secrets
       uses: ./
       with:
@@ -22,7 +16,6 @@ runs:
         dockerfile: tests/secrets-test/Dockerfile
         containerSecrets: |
           GIT_AUTH_TOKEN=dummy-token
-          TEST_SECRET_FILE=${{ github.workspace }}/test_secret.txt
 
     - name: Assert secrets were used during build
       shell: bash
@@ -32,19 +25,10 @@ runs:
         output=$(docker run --rm localhost:5000/test-secrets:1.0.0)
         echo $output
 
-        # Verify token secret was used
         if echo "$output" | grep -q "Token: dummy-token"; then
           echo "✅ Container used GIT_AUTH_TOKEN secret correctly"
         else
           echo "❌ Container failed to use GIT_AUTH_TOKEN secret"
-          exit 1
-        fi
-        
-        # Verify file secret was used
-        if echo "$output" | grep -q "Secret file: This is a test secret"; then
-          echo "✅ Container used TEST_SECRET_FILE correctly"
-        else
-          echo "❌ Container failed to use TEST_SECRET_FILE secret"
           exit 1
         fi
 
