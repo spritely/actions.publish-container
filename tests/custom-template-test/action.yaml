@@ -44,7 +44,10 @@ runs:
       shell: bash
       if: always()
       run: |
-        summary="${{ steps.publish.outputs.summary }}"
+        summary=$(cat << 'DELIMITER'
+          ${{ steps.publish.outputs.summary }}
+          DELIMITER
+        )
         exit_code=0
         
         # Check that the summary includes our custom formatting
@@ -114,7 +117,10 @@ runs:
       shell: bash
       if: always()
       run: |
-        summary="${{ steps.publishComplex.outputs.summary }}"
+        summary=$(cat << 'DELIMITER'
+          ${{ steps.publish.outputs.summary }}
+          DELIMITER
+        )
         exit_code=0
         
         # Check that conditional was rendered

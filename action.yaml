@@ -143,13 +143,12 @@ runs:
       name: Write summary to GitHub
       shell: bash
       run: |
-        summary_file="${{ github.workspace }}/.actions.publish-container/output.md"
-        summary=$(cat "$summary_file")
-
         # Export results
-        echo "summary<<EOF" >> $GITHUB_OUTPUT
-        echo "$summary" >> $GITHUB_OUTPUT
-        echo "EOF" >> $GITHUB_OUTPUT
+        {
+          echo "summary<<DELIMITER"
+          cat "${{ github.workspace }}/.actions.publish-container/output.md"
+          echo "DELIMITER"
+        } >> $GITHUB_OUTPUT
  
         # Display results in GitHub
-        cat "$summary_file" >> $GITHUB_STEP_SUMMARY
+        cat "${{ github.workspace }}/.actions.publish-container/output.md" >> $GITHUB_STEP_SUMMARY
