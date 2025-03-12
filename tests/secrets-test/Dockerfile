@@ -1,12 +1,10 @@
 FROM alpine:3.21.3
 
-# Use ARG for build-time variables
-ARG GIT_AUTH_TOKEN
-ARG TEST_SECRET
-
-# Store the secret values in the image (for testing only)
-RUN echo "Token: ${GIT_AUTH_TOKEN}" > /token.txt && \
-    echo "Secret: ${TEST_SECRET}" > /secretfile.txt
+# Mount secrets during build
+RUN --mount=type=secret,id=GIT_AUTH_TOKEN \
+    --mount=type=secret,id=TEST_SECRET_FILE \
+    echo "Token: $(cat /run/secrets/GIT_AUTH_TOKEN)" > /token.txt && \
+    echo "Secret file: $(cat /run/secrets/TEST_SECRET_FILE)" > /secretfile.txt
 
 # Create a script to output the values
 RUN echo '#!/bin/sh' > /run.sh && \

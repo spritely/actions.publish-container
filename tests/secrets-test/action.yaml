@@ -53,7 +53,7 @@ runs:
       if: always()
       run: |
         # Check some main locations, scanning the entire filesystem takes too long
-        found_secret=$(docker run --rm localhost:5000/test-secrets:1.0.0 grep -q "This is a test secret" /etc/* /bin/* 2>/dev/null && echo "found" || echo "")
+        found_secret=$(docker run --rm localhost:5000/test-secrets:1.0.0 grep -q "This is a test secret" /etc/* /bin/* /run/* 2>/dev/null && echo "found" || echo "")
         
         if [ -z "$found_secret" ]; then
           echo "✅ No secrets found in common locations of final image"
