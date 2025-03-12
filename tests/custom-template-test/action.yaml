@@ -1,0 +1,137 @@
+name: Publish container uses provided summary template
+description: Test to validate that publish container uses provided summary template
+
+runs:
+  using: composite
+  steps:
+    - id: publish
+      name: Run publish-container action with custom template
+      uses: ./
+      with:
+        registryHost: localhost:5000
+        registryUsername: testuser
+        registryPassword: testpassword
+        imageNames: localhost:5000/test-template
+        version: 1.0.0
+        context: tests/custom-template-test
+        dockerfile: tests/custom-template-test/Dockerfile
+        messageTemplate: |
+          ## 🚀 Container Build Results
+          
+          **Version:** {{ version }}
+          **Built by:** {{ owner }}/{{ repo }}
+          
+          ### 📦 Images
+          {% for image in images %}
+          - `{{ image }}` 🔄
+          {% endfor %}
+          
+          ### 🏷️ Tags
+          | Tag | Full Name |
+          |-----|-----------|
+          {% for tag in tags %}
+          | `{{ tag }}` | `{{ registry }}/test-template:{{ tag }}` |
+          {% endfor %}
+          
+          ### 📋 Metadata
+          ```json
+          {
+            "labels": {{ labels | tojson }}
+          }
+          ```
+
+    - name: Assert custom template was rendered correctly
+      shell: bash
+      run: |
+        summary="${{ steps.publish.outputs.summary }}"
+        
+        # Check that the summary includes our custom formatting
+        if echo "$summary" | grep -q "🚀 Container Build Results"; then
+          echo "✅ Summary includes custom header"
+        else
+          echo "❌ Summary missing custom header"
+          exit 1
+        fi
+        
+        # Check that version was included
+        if echo "$summary" | grep -q "**Version:** 1.0.0"; then
+          echo "✅ Summary includes version"
+        else
+          echo "❌ Summary missing version"
+          exit 1
+        fi
+        
+        # Check that the table header was rendered
+        if echo "$summary" | grep -q "| Tag | Full Name |"; then
+          echo "✅ Summary includes table formatting"
+        else
+          echo "❌ Summary missing table formatting"
+          exit 1
+        fi
+        
+        # Check that JSON formatting was applied
+        if echo "$summary" | grep -q '```json'; then
+          echo "✅ Summary includes JSON code block"
+        else
+          echo "❌ Summary missing JSON code block"
+          exit 1
+        fi
+        
+    - id: publish_complex
+      name: Run publish-container action with complex template including conditionals
+      uses: ./
+      with:
+        registryHost: localhost:5000
+        registryUsername: testuser
+        registryPassword: testpassword
+        imageNames: localhost:5000/test-complex-template
+        version: 2.0.0-beta.1
+        context: tests/custom-template-test
+        dockerfile: tests/custom-template-test/Dockerfile
+        messageTemplate: |
+          # Build Summary for {{ repo }}
+          
+          {% if version is defined and version.endswith('-beta.1') %}
+          > ⚠️ **Beta Release**: This is a pre-release version
+          {% endif %}
+          
+          ## Images Built
+          {% for image in images %}
+          - {{ image }}
+            {% if 'complex' in image %}
+            (Complex template test)
+            {% endif %}
+          {% endfor %}
+          
+          ## Tag Count: {{ tags | length }}
+          
+    - name: Assert complex template with conditionals was rendered correctly
+      shell: bash
+      run: |
+        summary="${{ steps.publish_complex.outputs.summary }}"
+        
+        # Check that conditional was rendered
+        if echo "$summary" | grep -q "⚠️ \*\*Beta Release\*\*"; then
+          echo "✅ Summary includes conditional beta warning"
+        else
+          echo "❌ Summary missing conditional beta warning"
+          exit 1
+        fi
+        
+        # Check that the image name conditional was rendered
+        if echo "$summary" | grep -q "(Complex template test)"; then
+          echo "✅ Summary includes nested conditional text"
+        else
+          echo "❌ Summary missing nested conditional text"
+          exit 1
+        fi
+        
+        # Check that the filter/function was applied
+        if echo "$summary" | grep -q "Tag Count:"; then
+          echo "✅ Summary includes tag count from filter"
+        else
+          echo "❌ Summary missing tag count from filter"
+          exit 1
+        fi
+        
+        echo "All custom template tests passed successfully! ✅"

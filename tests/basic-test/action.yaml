@@ -1,4 +1,5 @@
 name: Publish container publishes expected container
+description: Test to validate that publish container publishes expected container
 
 runs:
   using: composite
@@ -11,62 +12,65 @@ runs:
         registryUsername: testuser
         registryPassword: testpassword
         imageNames: localhost:5000/test-image
-        version: 1.0.0
+        version: 2.3.4
         context: tests/basic-test
         dockerfile: tests/basic-test/Dockerfile
 
     - name: Assert contains expected tags
       shell: bash
       run: |
-        echo "Verifying image tags..."
-
-        TAGS=$(curl -s -u testuser:testpassword http://localhost:5000/v2/test-image/tags/list | jq -r '.tags[]')
+        tags=$(curl -s -u testuser:testpassword http://localhost:5000/v2/test-image/tags/list | jq -r '.tags[]')
         
         # Check for specific version tags
-        for TAG in "1.0.0" "1.0" "1"; do
-          if echo "$TAGS" | grep -q "$TAG"; then
-            echo "✅ Found expected tag: $TAG"
+        for tag in "2.3.4" "2.3" "2"; do
+          if echo "$tags" | grep -q "$tag"; then
+            echo "✅ Found expected tag: $tag"
           else
-            echo "❌ Missing expected tag: $TAG"
+            echo "❌ Missing expected tag: $tag"
             exit 1
           fi
         done
         
-    - name: Assert container was published with correct labels
+    - name: Assert container runs
       shell: bash
       run: |
-        echo "Pulling image to verify content..."
-        docker pull localhost:5000/test-image:1.0.0
-        
-        # Test that the container runs and contains the expected content
-        OUTPUT=$(docker run --rm localhost:5000/test-image:1.0.0)
-        if [ "$OUTPUT" = "This is a test container" ]; then
+        docker pull localhost:5000/test-image:2.3.4
+        output=$(docker run --rm localhost:5000/test-image:2.3.4)
+
+        if [ "$output" = "This is a test container" ]; then
           echo "✅ Container runs correctly with expected output"
         else
-          echo "❌ Container output does not match expected: $OUTPUT"
+          echo "❌ Container output does not match expected: $output"
           exit 1
         fi
-        
-        # Verify label was applied
-        LABEL=$(docker inspect localhost:5000/test-image:1.0.0 | jq -r '.[0].Config.Labels["test.label"]')
-        if [ "$LABEL" = "test-value" ]; then
-          echo "✅ Container has expected label"
-        else
-          echo "❌ Container missing expected label: $LABEL"
-          exit 1
-        fi
-        
-    - name: Assert output includes summary
+
+    - name: Assert container contains expected labels
       shell: bash
       run: |
-        echo "Verifying action summary output..."
+        label=$(docker inspect localhost:5000/test-image:2.3.4 | jq -r '.[0].Config.Labels["test.label"]')
+        if [ "$label" = "test-value" ]; then
+          echo "✅ Container has expected label"
+        else
+          echo "❌ Container missing expected label: $label"
+          exit 1
+        fi
+        
+    - name: Assert output includes expected information
+      shell: bash
+      run: |
+        echo "${{ steps.publish.outputs.summary }}"
         
         if [ -n "${{ steps.publish.outputs.summary }}" ]; then
           echo "✅ Summary output exists"
-          echo "Summary: ${{ steps.publish.outputs.summary }}"
         else
           echo "❌ Missing summary output"
           exit 1
         fi
         
-        echo "All assertions passed successfully! ✅"
+        if echo "${{ steps.publish.outputs.summary }}" | grep -q "2.3.4"; then
+          echo "✅ Summary contains version information"
+        else
+          echo "❌ Summary missing version information"
+          exit 1
+        fi
+

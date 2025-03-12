@@ -1,0 +1,61 @@
+name: Publish container build secrets
+description: Test to validate that publish container publishes builds secrets
+
+runs:
+  using: composite
+  steps:
+    - name: Create test secret file
+      shell: bash
+      run: |
+        # Create a secret file to be used during build
+        echo "This is a test secret" > ${{ github.workspace }}/test_secret.txt
+        
+    - name: Run publish-container action with secrets
+      uses: ./
+      with:
+        registryHost: localhost:5000
+        registryUsername: testuser
+        registryPassword: testpassword
+        imageNames: localhost:5000/test-secrets
+        version: 1.0.0
+        context: tests/secrets-test
+        dockerfile: tests/secrets-test/Dockerfile
+        containerSecrets: |
+          GIT_AUTH_TOKEN=dummy-token
+          TEST_SECRET_FILE=${{ github.workspace }}/test_secret.txt
+        
+    - name: Assert secrets were used during build
+      shell: bash
+      run: |
+        docker pull localhost:5000/test-secrets:1.0.0
+        output=$(docker run --rm localhost:5000/test-secrets:1.0.0)
+        
+        # Verify token secret was used
+        if echo "$output" | grep -q "Token: dummy-token"; then
+          echo "✅ Container used GIT_AUTH_TOKEN secret correctly"
+        else
+          echo "❌ Container failed to use GIT_AUTH_TOKEN secret"
+          exit 1
+        fi
+        
+        # Verify file secret was used
+        if echo "$output" | grep -q "Secret file: This is a test secret"; then
+          echo "✅ Container used TEST_SECRET_FILE correctly"
+        else
+          echo "❌ Container failed to use TEST_SECRET_FILE secret"
+          exit 1
+        fi
+        
+    - name: Assert secrets are not leaked in image
+      shell: bash
+      run: |
+        found_secrets=$(docker run --rm localhost:5000/test-secrets:1.0.0 find / -type f -exec grep -l "This is a test secret" {} \; 2>/dev/null || true)
+        
+        if [ -z "$found_secrets" ]; then
+          echo "✅ No secret files found in the final image"
+        else
+          echo "❌ Secret files found in the final image: $found_secrets"
+          exit 1
+        fi
+        
+        echo "All secret handling tests passed successfully! ✅"

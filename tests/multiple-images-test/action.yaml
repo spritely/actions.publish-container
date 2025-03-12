@@ -1,0 +1,90 @@
+name: Publish container publishes multiple images
+description: Test to validate that publish container publishes multiple images
+
+runs:
+  using: composite
+  steps:
+    - id: publish
+      name: Run publish-container action with multiple image names
+      uses: ./
+      with:
+        registryHost: localhost:5000
+        registryUsername: testuser
+        registryPassword: testpassword
+        imageNames: |
+          localhost:5000/multiple-images-test-1
+          localhost:5000/multiple-images-test-2
+        version: 1.0.0
+        context: tests/multiple-images-test
+        dockerfile: tests/multiple-images-test/Dockerfile
+        
+    - name: Assert first image was published with correct tags
+      shell: bash
+      run: |
+        tags=$(curl -s -u testuser:testpassword http://localhost:5000/v2/multiple-images-test-1/tags/list | jq -r '.tags[]')
+        
+        # Check for expected version tags
+        for tag in "1.0.0" "1.0" "1"; do
+          if echo "$tags" | grep -q "$tag"; then
+            echo "✅ First image has expected tag: $tag"
+          else
+            echo "❌ First image missing expected tag: $tag"
+            exit 1
+          fi
+        done
+        
+    - name: Assert second image was published with correct tags
+      shell: bash
+      run: |
+        tags=$(curl -s -u testuser:testpassword http://localhost:5000/v2/multiple-images-test-2/tags/list | jq -r '.tags[]')
+        
+        # Check for expected version tags
+        for tag in "1.0.0" "1.0" "1"; do
+          if echo "$tags" | grep -q "$tag"; then
+            echo "✅ Second image has expected tag: $tag"
+          else
+            echo "❌ Second image missing expected tag: $tag"
+            exit 1
+          fi
+        done
+
+    - name: Assert first image runs
+      shell: bash
+      run: |
+        docker pull localhost:5000/multiple-images-test-1:1.0.0
+        output=$(docker run --rm localhost:5000/multiple-images-test-1:1.0.0)
+        
+        if [ "$output" = "This is a test container" ]; then
+          echo "✅ First container runs with expected output"
+        else
+          echo "❌ First container output incorrect: $output1"
+          exit 1
+        fi
+
+    - name: Assert second image runs
+      shell: bash
+      run: |
+        docker pull localhost:5000/multiple-images-test-2:1.0.0
+        output=$(docker run --rm localhost:5000/multiple-images-test-2:1.0.0)
+        
+        if [ "$output" = "This is a test container" ]; then
+          echo "✅ Second container runs with expected output"
+        else
+          echo "❌ Second container output incorrect: $output2"
+          exit 1
+        fi
+        
+    - name: Assert summary includes both images
+      shell: bash
+      run: |
+        summary="${{ steps.publish.outputs.summary }}"
+        
+        if echo "$summary" | grep -q "multiple-images-test-1" && echo "$summary" | grep -q "multiple-images-test-2"; then
+          echo "✅ Summary includes both image names"
+        else
+          echo "❌ Summary doesn't include both image names"
+          echo "Summary: $summary"
+          exit 1
+        fi
+        
+        echo "All multiple image tests passed successfully! ✅"
