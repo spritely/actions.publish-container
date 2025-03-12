@@ -49,6 +49,7 @@ runs:
         DELIMITER
         )
         exit_code=0
+        echo $summary
         
         # Check that the summary includes our custom formatting
         if echo "$summary" | grep -q "🚀 Container Build Results"; then
@@ -118,10 +119,11 @@ runs:
       if: always()
       run: |
         summary=$(cat << 'DELIMITER'
-        ${{ steps.publish.outputs.summary }}
+        ${{ steps.publishComplex.outputs.summary }}
         DELIMITER
         )
         exit_code=0
+        echo $summary
         
         # Check that conditional was rendered
         if echo "$summary" | grep -q "⚠️ \*\*Beta Release\*\*"; then
