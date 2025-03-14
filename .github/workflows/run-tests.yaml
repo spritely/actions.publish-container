@@ -7,8 +7,9 @@ jobs:
     name: Run tests
     runs-on: ubuntu-24.04
     steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
+      - id: version
+        name: Get semantic version
+        uses: spritely/actions.semantic-version/get@v0.2.0
 
       - id: setup-tests
         name: Start container registry
@@ -35,3 +36,9 @@ jobs:
       - name: Run test - Publish container build secrets
         uses: ./tests/secrets-test
         if: always() && steps.setup-tests.outcome == 'success'
+
+      - name: Apply semantic version
+        if: ${{ steps.version.outputs.branchName == github.event.repository.default_branch }}
+        uses: spritely/actions.semantic-version/apply@v0.2.0
+        with:
+          version: ${{ steps.version.outputs.version }}
