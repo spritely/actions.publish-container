@@ -97,7 +97,9 @@ finalize_test() {
         fi
         
         if [ "$status" = "S" ]; then
-            echo "        <testcase name=\"$name\" classname=\"$test_class\" time=\"0\"/>" >> "$TEST_RESULTS_DIR/$test_class.xml"
+            echo "        <testcase name=\"$name\" classname=\"$test_class\" time=\"0\">
+            <system-out>$message</system-out>
+        </testcase>" >> "$TEST_RESULTS_DIR/$test_class.xml"
         else  # status = F
             echo "        <testcase name=\"$name\" classname=\"$test_class\" time=\"0\">
             <failure message=\"$message\"></failure>

@@ -35,9 +35,9 @@ runs:
         # Check for specific version tags
         for tag in "2.3.4" "2.3" "2"; do
           if echo "$tags" | grep -q "$tag"; then
-            success "has-tag-$tag" "Found expected tag: $tag"
+            success "Assert contains expected tags - $tag" "Found expected tag: $tag"
           else
-            failure "has-tag-$tag" "Missing expected tag: $tag"
+            failure "Assert contains expected tags - $tag" "Missing expected tag: $tag"
             exit_code=1
           fi
         done
@@ -55,9 +55,9 @@ runs:
         echo $output
 
         if [ "$output" = "This is a test container" ]; then
-          success "container-runs" "Container runs correctly with expected output"
+          success "Assert container runs" "Container runs correctly with expected output"
         else
-          failure "container-runs" "Container output does not match expected: $output"
+          failure "Assert container runs" "Container output does not match expected: $output"
           exit 1
         fi
 
@@ -71,9 +71,9 @@ runs:
         echo $label
         
         if [ "$label" = "basic-test" ]; then
-          success "contains-label" "Container has expected label: test.label=basic-test"
+          success "Assert container contains expected labels" "Container has expected label: test.label=basic-test"
         else
-          failure "contains-label" "Container missing or has incorrect label: $label"
+          failure "Assert container contains expected labels" "Container missing or has incorrect label: $label"
           exit 1
         fi
 
@@ -87,16 +87,16 @@ runs:
         exit_code=0
         
         if [ -n "${{ steps.publish.outputs.summary }}" ]; then
-          success "summary-exists" "Summary output exists"
+          success "Assert output includes expected information" "Summary output exists"
         else
-          failure "summary-exists" "Missing summary output"
+          failure "Assert output includes expected information" "Missing summary output"
           exit_code=1
         fi
         
-        if echo "${{ steps.publish.outputs.summary }}" | grep -q "2.3.4"; then
-          success "contains-version" "Summary contains version information"
+        if echo "${{ steps.publish.outputs.summary }}" | grep -q "2.3.5"; then
+          success "Assert output includes expected information" "Summary contains version information"
         else
-          failure "contains-version" "Summary missing version information"
+          failure "Assert output includes expected information" "Summary missing version information"
           exit_code=1
         fi
         
