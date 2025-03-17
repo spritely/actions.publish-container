@@ -22,7 +22,7 @@ get_current_test_class() {
 # Set the current test step name
 set_test_name() {
     CURRENT_TEST_NAME="$1"
-    echo "🔍 Test step: $CURRENT_TEST_NAME"
+    echo "🔍 $CURRENT_TEST_NAME"
 }
 
 initialize_test() {

@@ -4,6 +4,12 @@ description: Test to validate that publish container uses provided summary templ
 runs:
   using: composite
   steps:
+    - name: Initialize test
+      shell: bash
+      run: |
+        source ${{ github.workspace }}/tests/test-reporter.sh
+        initialize_test "Publish container uses provided summary template" "custom-template-test"
+
     - id: publish
       name: Run publish-container action with custom template
       uses: ./
@@ -44,6 +50,9 @@ runs:
       shell: bash
       if: always()
       run: |
+        source ${{ github.workspace }}/tests/test-reporter.sh
+        set_test_name "Assert custom template was rendered correctly"
+        
         summary=$(cat << 'DELIMITER'
         ${{ steps.publish.outputs.summary }}
         DELIMITER
@@ -53,33 +62,33 @@ runs:
         
         # Check that the summary includes our custom formatting
         if echo "$summary" | grep -q "🚀 Container Build Results"; then
-          echo "✅ Summary includes custom header"
+          success "Includes custom header" "Summary includes custom header"
         else
-          echo "❌ Summary missing custom header"
+          failure "Includes custom header" "Summary missing custom header"
           exit_code=1
         fi
         
         # Check that version was included
         if echo "$summary" | grep -F "**Version:** 1.0.0"; then
-          echo "✅ Summary includes version"
+          success "Includes version" "Summary includes version"
         else
-          echo "❌ Summary missing version"
+          failure "Includes version" "Summary missing version"
           exit_code=1
         fi
         
         # Check that the table header was rendered
         if echo "$summary" | grep -q "| Tag | Full Name |"; then
-          echo "✅ Summary includes table formatting"
+          success "Includes table formatting" "Summary includes table formatting"
         else
-          echo "❌ Summary missing table formatting"
+          failure "Includes table formatting" "Summary missing table formatting"
           exit_code=1
         fi
         
         # Check that JSON formatting was applied
         if echo "$summary" | grep -q '```json'; then
-          echo "✅ Summary includes JSON code block"
+          success "Includes JSON code block" "Summary includes JSON code block"
         else
-          echo "❌ Summary missing JSON code block"
+          failure "Includes JSON code block" "Summary missing JSON code block"
           exit_code=1
         fi
 
@@ -118,6 +127,9 @@ runs:
       shell: bash
       if: always()
       run: |
+        source ${{ github.workspace }}/tests/test-reporter.sh
+        set_test_name "Assert complex template with conditionals was rendered correctly"
+        
         summary=$(cat << 'DELIMITER'
         ${{ steps.publishComplex.outputs.summary }}
         DELIMITER
@@ -127,26 +139,33 @@ runs:
         
         # Check that conditional was rendered
         if echo "$summary" | grep -q "⚠️ \*\*Beta Release\*\*"; then
-          echo "✅ Summary includes conditional beta warning"
+          success "Includes beta warning" "Summary includes conditional beta warning"
         else
-          echo "❌ Summary missing conditional beta warning"
+          failure "Includes beta warning" "Summary missing conditional beta warning"
           exit_code=1
         fi
         
         # Check that the image name conditional was rendered
         if echo "$summary" | grep -q "(Complex template test)"; then
-          echo "✅ Summary includes nested conditional text"
+          success "Includes nested conditional" "Summary includes nested conditional text"
         else
-          echo "❌ Summary missing nested conditional text"
+          failure "Includes nested conditional" "Summary missing nested conditional text"
           exit_code=1
         fi
         
         # Check that the filter/function was applied
         if echo "$summary" | grep -q "Tag Count:"; then
-          echo "✅ Summary includes tag count from filter"
+          success "Includes tag count" "Summary includes tag count from filter"
         else
-          echo "❌ Summary missing tag count from filter"
+          failure "Includes tag count" "Summary missing tag count from filter"
           exit_code=1
         fi
 
         exit $exit_code
+
+    - name: Finalize test
+      shell: bash
+      if: always()
+      run: |
+        source ${{ github.workspace }}/tests/test-reporter.sh
+        finalize_testname: Publish container uses provided summary template

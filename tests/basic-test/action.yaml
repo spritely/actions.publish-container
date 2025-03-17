@@ -91,9 +91,9 @@ runs:
         exit_code=0
         
         if [ -n "${{ steps.publish.outputs.summary }}" ]; then
-          success "Summary exists"" "Summary output exists"
+          success "Summary exists" "Summary output exists"
         else
-          failure "Summary exists"" "Missing summary output"
+          failure "Summary exists" "Missing summary output"
           exit_code=1
         fi
         
