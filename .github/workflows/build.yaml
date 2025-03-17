@@ -37,9 +37,8 @@ jobs:
         uses: ./tests/secrets-test
         if: always() && steps.setup-tests.outcome == 'success'
 
-      - id: test-report
-        name: Generate test report
-        uses: dorny/test-reporter@v1.9.1
+      - name: Generate test report
+        uses: dorny/test-reporter@v2.0.0
         if: always()
         with:
           name: Test Results
