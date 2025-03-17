@@ -2,7 +2,7 @@
 
 A GitHub Action that builds and publishes containers to a container registry with standardized tagging and customizable summaries.
 
-[![Build](https://github.com/spritely/actions.publish-container/actions/workflows/build.yml/badge.svg)](https://github.com/spritely/actions.publish-container/actions/workflows/build.yml)
+[![Build](https://github.com/spritely/actions.publish-container/actions/workflows/build.yaml/badge.svg)](https://github.com/spritely/actions.publish-container/actions/workflows/build.yaml)
 
 ## Features
 
