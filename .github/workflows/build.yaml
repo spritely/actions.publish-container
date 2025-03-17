@@ -45,6 +45,12 @@ jobs:
           path: test-results/*.xml
           reporter: java-junit
 
+      - name: Add test report link
+        if: always()
+        run: |
+          echo "## Test Report" >> $GITHUB_STEP_SUMMARY
+          echo "- [View GitHub test report](${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID})" >> $GITHUB_STEP_SUMMARY
+
       - name: Apply semantic version
         if: ${{ steps.version.outputs.branchName == github.event.repository.default_branch }}
         uses: spritely/actions.semantic-version/apply@v0.2.0
