@@ -48,6 +48,10 @@ inputs:
       {% for key, value in labels.items() %}
       - **{{ key }}**: {{ value }}
       {% endfor %}
+  writeSummary:
+    description: Whether to write the summary to GitHub's step summary
+    required: false
+    default: 'true'
 outputs:
   summary:
     description: Markdown summary of the build results
@@ -153,5 +157,7 @@ runs:
           echo "DELIMITER"
         } >> $GITHUB_OUTPUT
  
-        # Display results in GitHub
-        cat "${{ github.workspace }}/.actions.publish-container/output.md" >> $GITHUB_STEP_SUMMARY
+        # Write results to GitHub Summary if requested
+        if [ "${{ inputs.writeSummary }}" = "true" ]; then
+          cat "${{ github.workspace }}/.actions.publish-container/output.md" >> $GITHUB_STEP_SUMMARY
+        fi

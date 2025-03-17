@@ -21,6 +21,7 @@ runs:
         version: 2.3.4
         context: tests/basic-test
         dockerfile: tests/basic-test/Dockerfile
+        writeSummary: false
 
     - name: Assert contains expected tags
       shell: bash

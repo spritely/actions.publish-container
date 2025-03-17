@@ -19,6 +19,7 @@ runs:
         version: 1.0.0
         context: tests/secrets-test
         dockerfile: tests/secrets-test/Dockerfile
+        writeSummary: false
         containerSecrets: |
           GIT_AUTH_TOKEN=dummy-token
           

@@ -22,6 +22,7 @@ runs:
         version: 1.0.0
         context: tests/multiple-images-test
         dockerfile: tests/multiple-images-test/Dockerfile
+        writeSummary: false
         
     - name: Assert first image was published with correct tags
       shell: bash

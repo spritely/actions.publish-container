@@ -21,6 +21,7 @@ runs:
         version: 1.0.0
         context: tests/custom-template-test
         dockerfile: tests/custom-template-test/Dockerfile
+        writeSummary: false
         messageTemplate: |-
           ## 🚀 Container Build Results
           
@@ -106,6 +107,7 @@ runs:
         version: 2.0.0-beta.1
         context: tests/custom-template-test
         dockerfile: tests/custom-template-test/Dockerfile
+        writeSummary: false
         messageTemplate: |-
           # Build Summary for {{ repo }}
           
