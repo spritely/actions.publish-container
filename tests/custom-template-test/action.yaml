@@ -1,0 +1,173 @@
+name: Publish container uses provided summary template
+description: Test to validate that publish container uses provided summary template
+
+runs:
+  using: composite
+  steps:
+    - name: Initialize test
+      shell: bash
+      run: |
+        source ${{ github.workspace }}/tests/test-reporter.sh
+        initialize_test "Publish container uses provided summary template" "custom-template-test"
+
+    - id: publish
+      name: Run publish-container action with custom template
+      uses: ./
+      with:
+        registryHost: localhost:5000
+        registryUsername: testuser
+        registryPassword: testpassword
+        imageNames: localhost:5000/test-template
+        version: 1.0.0
+        context: tests/custom-template-test
+        dockerfile: tests/custom-template-test/Dockerfile
+        writeSummary: false
+        messageTemplate: |-
+          ## 🚀 Container Build Results
+          
+          **Version:** {{ version }}
+          **Built by:** {{ owner }}/{{ repo }}
+          
+          ### 📦 Images
+          {% for image in images %}
+          - `{{ image }}` 🔄
+          {% endfor %}
+          
+          ### 🏷️ Tags
+          | Tag | Full Name |
+          |-----|-----------|
+          {% for tag in tags %}
+          | `{{ tag }}` | `{{ registry }}/test-template:{{ tag }}` |
+          {% endfor %}
+          
+          ### 📋 Metadata
+          ```json
+          {
+            "labels": {{ labels | tojson }}
+          }
+          ```
+
+    - name: Assert custom template was rendered correctly
+      shell: bash
+      if: always()
+      run: |
+        source ${{ github.workspace }}/tests/test-reporter.sh
+        set_test_name "Assert custom template was rendered correctly"
+        
+        summary=$(cat << 'DELIMITER'
+        ${{ steps.publish.outputs.summary }}
+        DELIMITER
+        )
+        exit_code=0
+        echo "$summary"
+        
+        # Check that the summary includes our custom formatting
+        if echo "$summary" | grep -q "🚀 Container Build Results"; then
+          success "Includes custom header" "Summary includes custom header"
+        else
+          failure "Includes custom header" "Summary missing custom header"
+          exit_code=1
+        fi
+        
+        # Check that version was included
+        if echo "$summary" | grep -F "**Version:** 1.0.0"; then
+          success "Includes version" "Summary includes version"
+        else
+          failure "Includes version" "Summary missing version"
+          exit_code=1
+        fi
+        
+        # Check that the table header was rendered
+        if echo "$summary" | grep -q "| Tag | Full Name |"; then
+          success "Includes table formatting" "Summary includes table formatting"
+        else
+          failure "Includes table formatting" "Summary missing table formatting"
+          exit_code=1
+        fi
+        
+        # Check that JSON formatting was applied
+        if echo "$summary" | grep -q '```json'; then
+          success "Includes JSON code block" "Summary includes JSON code block"
+        else
+          failure "Includes JSON code block" "Summary missing JSON code block"
+          exit_code=1
+        fi
+
+        exit $exit_code
+
+    - id: publishComplex
+      name: Run publish-container action with complex template including conditionals
+      uses: ./
+      if: always()
+      with:
+        registryHost: localhost:5000
+        registryUsername: testuser
+        registryPassword: testpassword
+        imageNames: localhost:5000/test-complex-template
+        version: 2.0.0-beta.1
+        context: tests/custom-template-test
+        dockerfile: tests/custom-template-test/Dockerfile
+        writeSummary: false
+        messageTemplate: |-
+          # Build Summary for {{ repo }}
+          
+          {% if version is defined and version.endswith('-beta.1') %}
+          > ⚠️ **Beta Release**: This is a pre-release version
+          {% endif %}
+          
+          ## Images Built
+          {% for image in images %}
+          - {{ image }}
+            {% if 'complex' in image %}
+            (Complex template test)
+            {% endif %}
+          {% endfor %}
+          
+          ## Tag Count: {{ tags | length }}
+
+    - name: Assert complex template with conditionals was rendered correctly
+      shell: bash
+      if: always()
+      run: |
+        source ${{ github.workspace }}/tests/test-reporter.sh
+        set_test_name "Assert complex template with conditionals was rendered correctly"
+        
+        summary=$(cat << 'DELIMITER'
+        ${{ steps.publishComplex.outputs.summary }}
+        DELIMITER
+        )
+        exit_code=0
+        echo "$summary"
+        
+        # Check that conditional was rendered
+        if echo "$summary" | grep -q "⚠️ \*\*Beta Release\*\*"; then
+          success "Includes beta warning" "Summary includes conditional beta warning"
+        else
+          failure "Includes beta warning" "Summary missing conditional beta warning"
+          exit_code=1
+        fi
+        
+        # Check that the image name conditional was rendered
+        if echo "$summary" | grep -q "(Complex template test)"; then
+          success "Includes nested conditional" "Summary includes nested conditional text"
+        else
+          failure "Includes nested conditional" "Summary missing nested conditional text"
+          exit_code=1
+        fi
+        
+        # Check that the filter/function was applied
+        if echo "$summary" | grep -q "Tag Count:"; then
+          success "Includes tag count" "Summary includes tag count from filter"
+        else
+          failure "Includes tag count" "Summary missing tag count from filter"
+          exit_code=1
+        fi
+
+        exit $exit_code
+
+    - name: Finalize test
+      shell: bash
+      if: always()
+      run: |
+        source ${{ github.workspace }}/tests/test-reporter.sh
+        finalize_test

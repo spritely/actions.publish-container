@@ -1,0 +1,66 @@
+name: Publish container build secrets
+description: Test to validate that publish container publishes builds secrets
+runs:
+  using: composite
+  steps:
+    - name: Initialize test
+      shell: bash
+      run: |
+        source ${{ github.workspace }}/tests/test-reporter.sh
+        initialize_test "Publish container build secrets" "secrets-test"
+        
+    - name: Run publish-container action with secrets
+      uses: ./
+      with:
+        registryHost: localhost:5000
+        registryUsername: testuser
+        registryPassword: testpassword
+        imageNames: localhost:5000/test-secrets
+        version: 1.0.0
+        context: tests/secrets-test
+        dockerfile: tests/secrets-test/Dockerfile
+        writeSummary: false
+        containerSecrets: |
+          GIT_AUTH_TOKEN=dummy-token
+          
+    - name: Assert secrets were used during build
+      shell: bash
+      if: always()
+      run: |
+        source ${{ github.workspace }}/tests/test-reporter.sh
+        set_test_name "Assert secrets were used during build"
+        
+        docker pull localhost:5000/test-secrets:1.0.0
+        output=$(docker run --rm localhost:5000/test-secrets:1.0.0)
+        echo $output
+        
+        if echo "$output" | grep -q "Token: dummy-token"; then
+          success "Container used GIT_AUTH_TOKEN secret correctly"
+        else
+          failure "Container failed to use GIT_AUTH_TOKEN secret"
+          exit 1
+        fi
+        
+    - name: Assert secrets are not leaked in image
+      shell: bash
+      if: always()
+      run: |
+        source ${{ github.workspace }}/tests/test-reporter.sh
+        set_test_name "Assert secrets are not leaked in image"
+        
+        # Check some main locations, scanning the entire filesystem takes too long
+        found_secret=$(docker run --rm localhost:5000/test-secrets:1.0.0 grep -q "This is a test secret" /etc/* /bin/* /run/* 2>/dev/null && echo "found" || echo "")
+        
+        if [ -z "$found_secret" ]; then
+          success "No secrets found in common locations of final image"
+        else
+          failure "Secrets found in image"
+          exit 1
+        fi
+        
+    - name: Finalize test
+      shell: bash
+      if: always()
+      run: |
+        source ${{ github.workspace }}/tests/test-reporter.sh
+        finalize_test

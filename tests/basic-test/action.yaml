@@ -1,0 +1,115 @@
+name: Publish container publishes expected container
+description: Test to validate that publish container publishes expected container
+
+runs:
+  using: composite
+  steps:
+    - name: Initialize test
+      shell: bash
+      run: |
+        source ${{ github.workspace }}/tests/test-reporter.sh
+        initialize_test "Publish container publishes expected container" "basic-test"
+
+    - id: publish
+      name: Run publish-container action
+      uses: ./
+      with:
+        registryHost: localhost:5000
+        registryUsername: testuser
+        registryPassword: testpassword
+        imageNames: localhost:5000/test-image
+        version: 2.3.4
+        context: tests/basic-test
+        dockerfile: tests/basic-test/Dockerfile
+        writeSummary: false
+
+    - name: Assert contains expected tags
+      shell: bash
+      if: always()
+      run: |
+        source ${{ github.workspace }}/tests/test-reporter.sh
+        set_test_name "Assert contains expected tags"
+
+        tags=$(curl -s -u testuser:testpassword http://localhost:5000/v2/test-image/tags/list | jq -r '.tags[]')
+        echo $tags
+        exit_code=0
+        
+        # Check for specific version tags
+        for tag in "2.3.4" "2.3" "2"; do
+          if echo "$tags" | grep -q "$tag"; then
+            success "$tag" "Found expected tag: $tag"
+          else
+            failure "$tag" "Missing expected tag: $tag"
+            exit_code=1
+          fi
+        done
+
+        exit $exit_code
+
+    - name: Assert container runs
+      shell: bash
+      if: always()
+      run: |
+        source ${{ github.workspace }}/tests/test-reporter.sh
+        set_test_name "Assert container runs"
+
+        docker pull localhost:5000/test-image:2.3.4
+        output=$(docker run --rm localhost:5000/test-image:2.3.4)
+        echo $output
+
+        if [ "$output" = "This is a test container" ]; then
+          success "Container runs correctly with expected output"
+        else
+          failure "Container output does not match expected: $output"
+          exit 1
+        fi
+
+    - name: Assert container contains expected labels
+      shell: bash
+      if: always()
+      run: |
+        source ${{ github.workspace }}/tests/test-reporter.sh
+        set_test_name "Assert container contains expected labels"
+
+        label=$(docker inspect localhost:5000/test-image:2.3.4 | jq -r '.[0].Config.Labels["test.label"]')
+        echo $label
+        
+        if [ "$label" = "basic-test" ]; then
+          success "Container has expected label: test.label=basic-test"
+        else
+          failure "Container missing or has incorrect label: $label"
+          exit 1
+        fi
+
+    - name: Assert output includes expected information
+      shell: bash
+      if: always()
+      run: |
+        source ${{ github.workspace }}/tests/test-reporter.sh
+        set_test_name "Assert output includes expected information"
+
+        echo "${{ steps.publish.outputs.summary }}"
+        exit_code=0
+        
+        if [ -n "${{ steps.publish.outputs.summary }}" ]; then
+          success "Summary exists" "Summary output exists"
+        else
+          failure "Summary exists" "Missing summary output"
+          exit_code=1
+        fi
+        
+        if echo "${{ steps.publish.outputs.summary }}" | grep -q "2.3.4"; then
+          success "Summary contains version" "Summary contains version information"
+        else
+          failure "Summary contains version" "Summary missing version information"
+          exit_code=1
+        fi
+        
+        exit $exit_code
+
+    - name: Finalize test
+      shell: bash
+      if: always()
+      run: |
+        source ${{ github.workspace }}/tests/test-reporter.sh
+        finalize_test
