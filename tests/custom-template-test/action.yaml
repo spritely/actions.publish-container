@@ -168,4 +168,4 @@ runs:
       if: always()
       run: |
         source ${{ github.workspace }}/tests/test-reporter.sh
-        finalize_testname: Publish container uses provided summary template
+        finalize_test
