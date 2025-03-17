@@ -45,20 +45,7 @@ jobs:
           name: Test Results
           path: test-results/*.xml
           reporter: java-junit
-
-      - name: Add test report link
-        if: always()
-        run: |
-          echo "## Test Report" >> $GITHUB_STEP_SUMMARY
-          
-          if [ "${{ steps.test-report.outcome }}" == "success" ]; then
-            echo "  - Total: ${{ steps.test-report.outputs.total }} tests" >> $GITHUB_STEP_SUMMARY
-            echo "  - Passed: ${{ steps.test-report.outputs.passed }}" >> $GITHUB_STEP_SUMMARY
-            echo "  - Failed: ${{ steps.test-report.outputs.failed }}" >> $GITHUB_STEP_SUMMARY
-          fi
-
-          echo "- [View detailed test results](${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID}?check_suite_focus=true#step:${GITHUB_JOB}:${GITHUB_RUN_ATTEMPT})" >> $GITHUB_STEP_SUMMARY
-          
+          use-actions-summary: true
 
       - name: Apply semantic version
         if: ${{ steps.version.outputs.branchName == github.event.repository.default_branch }}
