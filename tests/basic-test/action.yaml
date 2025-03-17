@@ -8,7 +8,7 @@ runs:
       shell: bash
       run: |
         source ${{ github.workspace }}/tests/test-reporter.sh
-        init_test "Publish container publishes expected container" "basic-test"
+        initialize_test "Publish container publishes expected container" "basic-test"
 
     - id: publish
       name: Run publish-container action

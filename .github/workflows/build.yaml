@@ -4,7 +4,7 @@ on: [push, workflow_dispatch]
 
 jobs:
   run-tests:
-    name: Run tests
+    name: Build
     runs-on: ubuntu-24.04
     steps:
       - id: version

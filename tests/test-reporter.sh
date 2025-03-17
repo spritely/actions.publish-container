@@ -1,11 +1,9 @@
 #!/usr/bin/env bash
 
 # Set the test results directory with a default that works locally and in CI
-# Use GITHUB_WORKSPACE if available, otherwise use current directory
 TEST_RESULTS_DIR="${GITHUB_WORKSPACE:-.}/test-results"
 
-# Initialize test suite
-init_test() {
+initialize_test() {
     local test_name="$1"
     local test_class="$2"
     
@@ -15,6 +13,9 @@ init_test() {
     # Store test metadata in files to ensure persistence across steps
     echo "$test_name" > "$TEST_RESULTS_DIR/${test_class}-name.txt"
     echo "$test_class" > "$TEST_RESULTS_DIR/${test_class}-class.txt"
+
+    # Export value for future method calls
+    export TEST_CLASS="$test_class"
     
     # Clear any existing test cases file
     echo "" > "$TEST_RESULTS_DIR/${test_class}-cases.txt"
@@ -107,6 +108,8 @@ finalize_test() {
     
     echo "✨ Test complete: $test_name"
     echo "Results: $((total-failures))/$total passed"
+
+    cat "$TEST_RESULTS_DIR/$test_class.xml"
     
     # Return appropriate exit code
     if [ "$failures" -gt 0 ]; then
