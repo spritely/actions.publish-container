@@ -27,6 +27,7 @@ runs:
       if: always()
       run: |
         source ${{ github.workspace }}/tests/test-reporter.sh
+        set_test_name "Assert contains expected tags"
 
         tags=$(curl -s -u testuser:testpassword http://localhost:5000/v2/test-image/tags/list | jq -r '.tags[]')
         echo $tags
@@ -35,9 +36,9 @@ runs:
         # Check for specific version tags
         for tag in "2.3.4" "2.3" "2"; do
           if echo "$tags" | grep -q "$tag"; then
-            success "Assert contains expected tags - $tag" "Found expected tag: $tag"
+            success "$tag" "Found expected tag: $tag"
           else
-            failure "Assert contains expected tags - $tag" "Missing expected tag: $tag"
+            failure "$tag" "Missing expected tag: $tag"
             exit_code=1
           fi
         done
@@ -49,15 +50,16 @@ runs:
       if: always()
       run: |
         source ${{ github.workspace }}/tests/test-reporter.sh
+        set_test_name "Assert container runs"
 
         docker pull localhost:5000/test-image:2.3.4
         output=$(docker run --rm localhost:5000/test-image:2.3.4)
         echo $output
 
         if [ "$output" = "This is a test container" ]; then
-          success "Assert container runs" "Container runs correctly with expected output"
+          success "Container runs correctly with expected output"
         else
-          failure "Assert container runs" "Container output does not match expected: $output"
+          failure "Container output does not match expected: $output"
           exit 1
         fi
 
@@ -66,14 +68,15 @@ runs:
       if: always()
       run: |
         source ${{ github.workspace }}/tests/test-reporter.sh
+        set_test_name "Assert container contains expected labels"
 
         label=$(docker inspect localhost:5000/test-image:2.3.4 | jq -r '.[0].Config.Labels["test.label"]')
         echo $label
         
         if [ "$label" = "basic-test" ]; then
-          success "Assert container contains expected labels" "Container has expected label: test.label=basic-test"
+          success "Container has expected label: test.label=basic-test"
         else
-          failure "Assert container contains expected labels" "Container missing or has incorrect label: $label"
+          failure "Container missing or has incorrect label: $label"
           exit 1
         fi
 
@@ -82,21 +85,22 @@ runs:
       if: always()
       run: |
         source ${{ github.workspace }}/tests/test-reporter.sh
+        set_test_name "Assert output includes expected information"
 
         echo "${{ steps.publish.outputs.summary }}"
         exit_code=0
         
         if [ -n "${{ steps.publish.outputs.summary }}" ]; then
-          success "Assert output includes expected information" "Summary output exists"
+          success "Summary exists"" "Summary output exists"
         else
-          failure "Assert output includes expected information" "Missing summary output"
+          failure "Summary exists"" "Missing summary output"
           exit_code=1
         fi
         
-        if echo "${{ steps.publish.outputs.summary }}" | grep -q "2.3.5"; then
-          success "Assert output includes expected information" "Summary contains version information"
+        if echo "${{ steps.publish.outputs.summary }}" | grep -q "2.3.4"; then
+          success "Summary contains version" "Summary contains version information"
         else
-          failure "Assert output includes expected information" "Summary missing version information"
+          failure "Summary contains version" "Summary missing version information"
           exit_code=1
         fi
         

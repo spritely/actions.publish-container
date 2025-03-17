@@ -1,4 +1,4 @@
-name: Run Publish Container Tests
+name: Build
 
 on: [push, workflow_dispatch]
 

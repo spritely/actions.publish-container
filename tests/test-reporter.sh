@@ -3,6 +3,8 @@
 # Set the test results directory with a default that works locally and in CI
 TEST_RESULTS_DIR="${GITHUB_WORKSPACE:-.}/test-results"
 
+CURRENT_TEST_NAME=""
+
 get_current_test_class() {
     # Find the most recent class file
     for class_file in "$TEST_RESULTS_DIR/"*-class.txt; do
@@ -15,6 +17,12 @@ get_current_test_class() {
     # If no class file found, return error
     echo "ERROR: Could not determine test class. Make sure initialize_test was called first." >&2
     return 1
+}
+
+# Set the current test step name
+set_test_name() {
+    CURRENT_TEST_NAME="$1"
+    echo "🔍 Test step: $CURRENT_TEST_NAME"
 }
 
 initialize_test() {
@@ -34,21 +42,29 @@ initialize_test() {
     echo "📋 Running test: $test_name"
 }
 
-# Internal assert function
+# Internal function
 assert() {
     local name="$1"
     local result="$2"  # true or false
     local message="$3"
-    
+
+    # If no name provided and we have a current test step, use that
+    if [ -z "$name" ] && [ -n "$CURRENT_TEST_NAME" ]; then
+        name="$CURRENT_TEST_NAME"
+    elif [ -n "$name" ] && [ -n "$CURRENT_TEST_NAME" ] && [[ "$name" != "$CURRENT_TEST_NAME"* ]]; then
+        # If name doesn't start with current test step, prepend it
+        name="$CURRENT_TEST_NAME - $name"
+    fi
+
     local test_class=$(get_current_test_class)
     if [ $? -ne 0 ]; then
         return 1  # Error already reported by get_current_test_class
     fi
-    
+
     # Escape XML special characters
     message=$(echo "$message" | sed 's/&/\&amp;/g; s/</\&lt;/g; s/>/\&gt;/g; s/"/\&quot;/g; s/'"'"'/\&apos;/g')
     name=$(echo "$name" | sed 's/&/\&amp;/g; s/</\&lt;/g; s/>/\&gt;/g; s/"/\&quot;/g; s/'"'"'/\&apos;/g')
-    
+
     # Append to the test cases file with status (S=success, F=failure)
     if [ "$result" = true ]; then
         echo "S|$name|$message" >> "$TEST_RESULTS_DIR/${test_class}-cases.txt"
@@ -60,16 +76,33 @@ assert() {
 }
 
 success() {
-    local name="$1"
+    local name="${1:-}"
     local message="$2"
+
+    # If only one arg provided and CURRENT_TEST_NAME is set, 
+    # assume it's the message and use CURRENT_TEST_NAME for name
+    if [ -z "$message" ] && [ -n "$CURRENT_TEST_NAME" ]; then
+        message="$name"
+        name=""
+    fi
+
     assert "$name" true "$message"
 }
 
 failure() {
-    local name="$1"
+    local name="${1:-}"
     local message="$2"
+
+    # If only one arg provided and CURRENT_TEST_NAME is set, 
+    # assume it's the message and use CURRENT_TEST_NAME for name
+    if [ -z "$message" ] && [ -n "$CURRENT_TEST_NAME" ]; then
+        message="$name"
+        name=""
+    fi
+
     assert "$name" false "$message"
 }
+
 
 # Finalize the test suite
 finalize_test() {
@@ -77,25 +110,25 @@ finalize_test() {
     if [ $? -ne 0 ]; then
         return 1  # Error already reported by get_current_test_class
     fi
-    
+
     local test_name=$(cat "$TEST_RESULTS_DIR/${test_class}-name.txt")
     local cases_file="$TEST_RESULTS_DIR/${test_class}-cases.txt"
-    
+
     # Count total and failed tests
     local total=$(grep -v "^$" "$cases_file" | wc -l)
     local failures=$(grep "^F|" "$cases_file" | wc -l)
-    
-    # Start building the XML
+
+    # Build the final test result file
     echo "<?xml version=\"1.0\" encoding=\"UTF-8\"?>
 <testsuites>
     <testsuite name=\"$test_class\" tests=\"$total\" failures=\"$failures\" errors=\"0\" skipped=\"0\" timestamp=\"$(date -u +"%Y-%m-%dT%H:%M:%SZ")\">" > "$TEST_RESULTS_DIR/$test_class.xml"
-    
+
     # Process each test case
     while IFS="|" read -r status name message || [ -n "$status" ]; do
         if [ -z "$status" ]; then
             continue
         fi
-        
+
         if [ "$status" = "S" ]; then
             echo "        <testcase name=\"$name\" classname=\"$test_class\" time=\"0\">
             <system-out>$message</system-out>
@@ -106,21 +139,21 @@ finalize_test() {
         </testcase>" >> "$TEST_RESULTS_DIR/$test_class.xml"
         fi
     done < "$cases_file"
-    
-    # Close the XML
+
     echo "    </testsuite>
 </testsuites>" >> "$TEST_RESULTS_DIR/$test_class.xml"
-    
+
     # Clean up temporary files
     rm -f "$TEST_RESULTS_DIR/${test_class}-name.txt"
     rm -f "$TEST_RESULTS_DIR/${test_class}-class.txt"
     rm -f "$TEST_RESULTS_DIR/${test_class}-cases.txt"
-    
+
+    # Reset the current test step
+    CURRENT_TEST_NAME=""
+
     echo "✨ Test complete: $test_name"
     echo "Results: $((total-failures))/$total passed"
 
-    cat "$TEST_RESULTS_DIR/$test_class.xml"
-    
     # Return appropriate exit code
     if [ "$failures" -gt 0 ]; then
         return 1
