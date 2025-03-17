@@ -37,6 +37,14 @@ jobs:
         uses: ./tests/secrets-test
         if: always() && steps.setup-tests.outcome == 'success'
 
+      - name: Generate test report
+        uses: dorny/test-reporter@v1.9.1
+        if: always()
+        with:
+          name: Test Results
+          path: test-results/*.xml
+          reporter: java-junit
+
       - name: Apply semantic version
         if: ${{ steps.version.outputs.branchName == github.event.repository.default_branch }}
         uses: spritely/actions.semantic-version/apply@v0.2.0

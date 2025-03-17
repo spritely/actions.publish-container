@@ -4,6 +4,12 @@ description: Test to validate that publish container publishes expected containe
 runs:
   using: composite
   steps:
+    - name: Initialize test
+      shell: bash
+      run: |
+        source ${{ github.workspace }}/tests/test-reporter.sh
+        init_test "Publish container publishes expected container" "basic-test"
+
     - id: publish
       name: Run publish-container action
       uses: ./
@@ -20,6 +26,8 @@ runs:
       shell: bash
       if: always()
       run: |
+        source ${{ github.workspace }}/tests/test-reporter.sh
+
         tags=$(curl -s -u testuser:testpassword http://localhost:5000/v2/test-image/tags/list | jq -r '.tags[]')
         echo $tags
         exit_code=0
@@ -27,9 +35,9 @@ runs:
         # Check for specific version tags
         for tag in "2.3.4" "2.3" "2"; do
           if echo "$tags" | grep -q "$tag"; then
-            echo "✅ Found expected tag: $tag"
+            success "has-tag-$tag" "Found expected tag: $tag"
           else
-            echo "❌ Missing expected tag: $tag"
+            failure "has-tag-$tag" "Missing expected tag: $tag"
             exit_code=1
           fi
         done
@@ -40,14 +48,16 @@ runs:
       shell: bash
       if: always()
       run: |
+        source ${{ github.workspace }}/tests/test-reporter.sh
+
         docker pull localhost:5000/test-image:2.3.4
         output=$(docker run --rm localhost:5000/test-image:2.3.4)
         echo $output
 
         if [ "$output" = "This is a test container" ]; then
-          echo "✅ Container runs correctly with expected output"
+          success "container-runs" "Container runs correctly with expected output"
         else
-          echo "❌ Container output does not match expected: $output"
+          failure "container-runs" "Container output does not match expected: $output"
           exit 1
         fi
 
@@ -55,13 +65,15 @@ runs:
       shell: bash
       if: always()
       run: |
+        source ${{ github.workspace }}/tests/test-reporter.sh
+
         label=$(docker inspect localhost:5000/test-image:2.3.4 | jq -r '.[0].Config.Labels["test.label"]')
         echo $label
         
         if [ "$label" = "basic-test" ]; then
-          echo "✅ Container has expected label"
+          success "contains-label" "Container has expected label: test.label=basic-test"
         else
-          echo "❌ Container missing expected label: $label"
+          failure "contains-label" "Container missing or has incorrect label: $label"
           exit 1
         fi
 
@@ -69,21 +81,30 @@ runs:
       shell: bash
       if: always()
       run: |
+        source ${{ github.workspace }}/tests/test-reporter.sh
+
         echo "${{ steps.publish.outputs.summary }}"
         exit_code=0
         
         if [ -n "${{ steps.publish.outputs.summary }}" ]; then
-          echo "✅ Summary output exists"
+          success "summary-exists" "Summary output exists"
         else
-          echo "❌ Missing summary output"
+          failure "summary-exists" "Missing summary output"
           exit_code=1
         fi
         
         if echo "${{ steps.publish.outputs.summary }}" | grep -q "2.3.4"; then
-          echo "✅ Summary contains version information"
+          success "contains-version" "Summary contains version information"
         else
-          echo "❌ Summary missing version information"
+          failure "contains-version" "Summary missing version information"
           exit_code=1
         fi
         
         exit $exit_code
+
+    - name: Finalize test
+      shell: bash
+      if: always()
+      run: |
+        source ${{ github.workspace }}/tests/test-reporter.sh
+        finalize_test
