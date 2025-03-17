@@ -3,6 +3,20 @@
 # Set the test results directory with a default that works locally and in CI
 TEST_RESULTS_DIR="${GITHUB_WORKSPACE:-.}/test-results"
 
+get_current_test_class() {
+    # Find the most recent class file
+    for class_file in "$TEST_RESULTS_DIR/"*-class.txt; do
+        if [ -f "$class_file" ]; then
+            basename "$class_file" | sed 's/-class.txt//'
+            return 0
+        fi
+    done
+    
+    # If no class file found, return error
+    echo "ERROR: Could not determine test class. Make sure initialize_test was called first." >&2
+    return 1
+}
+
 initialize_test() {
     local test_name="$1"
     local test_class="$2"
@@ -13,9 +27,6 @@ initialize_test() {
     # Store test metadata in files to ensure persistence across steps
     echo "$test_name" > "$TEST_RESULTS_DIR/${test_class}-name.txt"
     echo "$test_class" > "$TEST_RESULTS_DIR/${test_class}-class.txt"
-
-    # Export value for future method calls
-    export TEST_CLASS="$test_class"
     
     # Clear any existing test cases file
     echo "" > "$TEST_RESULTS_DIR/${test_class}-cases.txt"
@@ -28,7 +39,11 @@ assert() {
     local name="$1"
     local result="$2"  # true or false
     local message="$3"
-    local test_class=$(cat "$TEST_RESULTS_DIR/${TEST_CLASS}-class.txt" 2>/dev/null || echo "$TEST_CLASS")
+    
+    local test_class=$(get_current_test_class)
+    if [ $? -ne 0 ]; then
+        return 1  # Error already reported by get_current_test_class
+    fi
     
     # Escape XML special characters
     message=$(echo "$message" | sed 's/&/\&amp;/g; s/</\&lt;/g; s/>/\&gt;/g; s/"/\&quot;/g; s/'"'"'/\&apos;/g')
@@ -58,16 +73,9 @@ failure() {
 
 # Finalize the test suite
 finalize_test() {
-    local test_class="${TEST_CLASS}"
-    
-    # If TEST_CLASS isn't set, try to read from file
-    if [ -z "$test_class" ]; then
-        for class_file in "$TEST_RESULTS_DIR/"*-class.txt; do
-            if [ -f "$class_file" ]; then
-                test_class=$(cat "$class_file")
-                break
-            fi
-        done
+    local test_class=$(get_current_test_class)
+    if [ $? -ne 0 ]; then
+        return 1  # Error already reported by get_current_test_class
     fi
     
     local test_name=$(cat "$TEST_RESULTS_DIR/${test_class}-name.txt")
@@ -118,20 +126,3 @@ finalize_test() {
         return 0
     fi
 }
-
-# If this script is being run directly (not sourced), display usage info
-if [[ "${BASH_SOURCE[0]}" == "${0}" ]]; then
-    echo "Test Helpers Script"
-    echo "This script is designed to be sourced from test scripts, not run directly."
-    echo ""
-    echo "Usage within a test script:"
-    echo "  source $(basename "${BASH_SOURCE[0]}")"
-    echo "  init_test \"Test Name\" \"test-class\""
-    echo "  # Run tests, using success() and failure() functions"
-    echo "  success \"Test Case\" \"Test passed message\""
-    echo "  failure \"Test Case\" \"Test failed message\""
-    echo "  finalize_test"
-    echo ""
-    echo "Results will be written to JUnit XML format at: $TEST_RESULTS_DIR"
-    exit 1
-fi
