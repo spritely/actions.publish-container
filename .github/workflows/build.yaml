@@ -46,10 +46,8 @@ jobs:
         uses: dorny/test-reporter@v2.0.0
         if: always()
         with:
-          name: Test Results
           path: test-results/*.xml
           reporter: java-junit
-          use-actions-summary: true
 
       - name: Apply semantic version
         if: ${{ steps.version.outputs.branchName == github.event.repository.default_branch }}
