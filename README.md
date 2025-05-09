@@ -14,7 +14,7 @@ A GitHub Action that builds and publishes containers to a container registry wit
 ## Usage
 
 ```yaml
-- uses: spritely/actions.publish-container@v0.1
+- uses: spritely/actions.publish-container@v0.1.3
   with:
     registryHost: ghcr.io
     registryUsername: ${{ github.actor }}
@@ -28,7 +28,7 @@ A GitHub Action that builds and publishes containers to a container registry wit
 ```yaml
 - name: Build and publish container
   id: publish
-  uses: spritely/actions.publish-container@v1
+  uses: spritely/actions.publish-container@v0.1.3
   with:
     registryHost: ghcr.io
     registryUsername: ${{ github.actor }}
