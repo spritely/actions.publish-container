@@ -49,9 +49,9 @@ inputs:
       - **{{ key }}**: {{ value }}
       {% endfor %}
   writeSummary:
-    description: Whether to write the summary to GitHub's step summary
+    description: Whether to write a summary to GitHub. Defaults to true.
     required: false
-    default: 'true'
+    default: "true"
 outputs:
   summary:
     description: Markdown summary of the build results
@@ -94,6 +94,8 @@ runs:
         tags: ${{ steps.containerMetadata.outputs.tags }}
         labels: ${{ steps.containerMetadata.outputs.labels }}
         secrets: ${{ inputs.containerSecrets }}
+      env:
+        DOCKER_BUILD_SUMMARY: ${{ inputs.writeSummary }}
 
     - id: resultMetadata
       name: Create JSON metadata object
@@ -134,7 +136,7 @@ runs:
         cat > "$working_directory/template.md.j2" << 'TEMPLATE_EOF'
         ${{ inputs.messageTemplate }}
         TEMPLATE_EOF
-        
+
         echo "In template:"
         cat "$working_directory/template.md.j2"
 
@@ -146,8 +148,7 @@ runs:
         data_file: ${{ github.workspace }}/.actions.publish-container/metadata.json
         data_format: json
 
-    - id: summary
-      name: Write summary to GitHub
+    - name: Write summary to GitHub
       shell: bash
       run: |
         # Export results
@@ -156,8 +157,8 @@ runs:
           cat "${{ github.workspace }}/.actions.publish-container/output.md"
           echo "DELIMITER"
         } >> $GITHUB_OUTPUT
- 
-        # Write results to GitHub Summary if requested
+
+        # Write output to GitHub Summary if requested
         if [ "${{ inputs.writeSummary }}" = "true" ]; then
           cat "${{ github.workspace }}/.actions.publish-container/output.md" >> $GITHUB_STEP_SUMMARY
         fi

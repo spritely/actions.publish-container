@@ -44,15 +44,15 @@ A GitHub Action that builds and publishes containers to a container registry wit
       GIT_AUTH_TOKEN=${{ secrets.GIT_AUTH_TOKEN }}
     messageTemplate: |
       ## 🚀 Container Build Results
-      
+
       **Version:** {{ version }}
       **Built by:** {{ owner }}/{{ repo }}
-      
+
       ### 📦 Images
       {% for image in images %}
       - `{{ image }}` 🔄
       {% endfor %}
-      
+
       ### 🏷️ Tags
       | Tag | Full Name |
       |-----|-----------|
@@ -73,7 +73,7 @@ A GitHub Action that builds and publishes containers to a container registry wit
 | `containerSecrets` | The secrets to use when building the container | No | "" |
 | `context` | The context to use when building | No | `${{ github.workspace }}` |
 | `dockerfile` | The dockerfile to build | No | `${{ github.workspace }}/Dockerfile` |
-| `writeSummary` | Whether to write the summary to GitHub's step summary | No | "true" |
+| `writeSummary` | Whether to write a summary to GitHub  | No | "true" |
 | `messageTemplate` | Jinja2 markdown template used to generate the build summary | No | Default template |
 
 ### Default Message Template

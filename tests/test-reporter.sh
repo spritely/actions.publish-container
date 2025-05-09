@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
 # Set the test results directory with a default that works locally and in CI
-TEST_RESULTS_DIR="${GITHUB_WORKSPACE:-.}/test-results"
+TEST_RESULTS_DIR="/tmp/test-results"
 
 CURRENT_TEST_NAME=""
 
@@ -13,7 +13,7 @@ get_current_test_class() {
             return 0
         fi
     done
-    
+
     # If no class file found, return error
     echo "ERROR: Could not determine test class. Make sure initialize_test was called first." >&2
     return 1
@@ -28,17 +28,17 @@ set_test_name() {
 initialize_test() {
     local test_name="$1"
     local test_class="$2"
-    
+
     # Create directory for test results
     mkdir -p "$TEST_RESULTS_DIR"
-    
+
     # Store test metadata in files to ensure persistence across steps
     echo "$test_name" > "$TEST_RESULTS_DIR/${test_class}-name.txt"
     echo "$test_class" > "$TEST_RESULTS_DIR/${test_class}-class.txt"
-    
+
     # Clear any existing test cases file
     echo "" > "$TEST_RESULTS_DIR/${test_class}-cases.txt"
-    
+
     echo "📋 Running test: $test_name"
 }
 
@@ -79,7 +79,7 @@ success() {
     local name="${1:-}"
     local message="$2"
 
-    # If only one arg provided and CURRENT_TEST_NAME is set, 
+    # If only one arg provided and CURRENT_TEST_NAME is set,
     # assume it's the message and use CURRENT_TEST_NAME for name
     if [ -z "$message" ] && [ -n "$CURRENT_TEST_NAME" ]; then
         message="$name"
@@ -93,7 +93,7 @@ failure() {
     local name="${1:-}"
     local message="$2"
 
-    # If only one arg provided and CURRENT_TEST_NAME is set, 
+    # If only one arg provided and CURRENT_TEST_NAME is set,
     # assume it's the message and use CURRENT_TEST_NAME for name
     if [ -z "$message" ] && [ -n "$CURRENT_TEST_NAME" ]; then
         message="$name"
