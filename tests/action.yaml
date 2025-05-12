@@ -1,5 +1,5 @@
 name: Run tests
-description: Setups up, runs each of the workflow tests in the project, and reports test results
+description: Sets up, runs each of the workflow tests in the project, and reports test results
 
 runs:
   using: composite
