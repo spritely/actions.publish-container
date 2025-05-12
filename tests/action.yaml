@@ -1,0 +1,46 @@
+name: Run tests
+description: Sets up, runs each of the workflow tests in the project, and reports test results
+
+runs:
+  using: composite
+  steps:
+    - id: setup-tests
+      name: Start test container registry
+      shell: bash
+      run: |
+        docker run -d -p 5000:5000 \
+            -v ${{ github.workspace }}/tests/container-registry:/auth \
+            -e REGISTRY_AUTH=htpasswd \
+            -e REGISTRY_AUTH_HTPASSWD_REALM="Registry Realm" \
+            -e REGISTRY_AUTH_HTPASSWD_PATH=/auth/htpasswd \
+            --name registry registry:2
+
+    - name: Run test - Publish container publishes expected container
+      uses: ./tests/basic-test
+      if: always() && steps.setup-tests.outcome == 'success'
+
+    - name: Run test - Publish container uses provided summary template
+      uses: ./tests/custom-template-test
+      if: always() && steps.setup-tests.outcome == 'success'
+
+    - name: Run test - Publish container publishes multiple images
+      uses: ./tests/multiple-images-test
+      if: always() && steps.setup-tests.outcome == 'success'
+
+    - name: Run test - Publish container build secrets
+      uses: ./tests/secrets-test
+      if: always() && steps.setup-tests.outcome == 'success'
+
+    - name: Add test report title
+      if: always()
+      shell: bash
+      run: |
+        echo "# Test Results" >> $GITHUB_STEP_SUMMARY
+
+    - name: Generate test report
+      uses: dorny/test-reporter@v2.0.0
+      if: always()
+      with:
+        name: Test Results
+        path: /tmp/test-results/*.xml
+        reporter: java-junit
