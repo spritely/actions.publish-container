@@ -1,5 +1,14 @@
 version: 2
 updates:
+  - package-ecosystem: docker
+    directories:
+      - "**/*"
+    schedule:
+      interval: daily
+    groups:
+      all-actions:
+        patterns:
+          - "*"
   - package-ecosystem: github-actions
     directories:
       - /
