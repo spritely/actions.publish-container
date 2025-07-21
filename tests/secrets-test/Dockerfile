@@ -1,4 +1,4 @@
-FROM alpine:3.22.0
+FROM alpine:3.22.1
 
 # Mount secrets during build
 RUN --mount=type=secret,id=GIT_AUTH_TOKEN \
