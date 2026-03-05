@@ -62,7 +62,7 @@ runs:
   steps:
     - id: containerMetadata
       name: Generate tags
-      uses: docker/metadata-action@c299e40c65443455700f0fdfc63efafe5b349051
+      uses: docker/metadata-action@030e881283bb7a6894de51c315a6bfe6a94e05cf
       with:
         images: ${{ inputs.imageNames }}
         # generate tags based on the following events/attributes
@@ -74,19 +74,19 @@ runs:
           type=semver,pattern={{major}},value=${{ inputs.version }}
 
     - name: Login to GitHub Container Registry
-      uses: docker/login-action@c94ce9fb468520275223c153574b00df6fe4bcc9
+      uses: docker/login-action@b45d80f862d83dbcd57f89517bcf500b2ab88fb2
       with:
         registry: ${{ inputs.registryHost }}
         username: ${{ inputs.registryUsername }}
         password: ${{ inputs.registryPassword }}
 
     - name: Set up Docker Buildx
-      uses: docker/setup-buildx-action@8d2750c68a42422c14e847fe6c8ac0403b4cbd6f
+      uses: docker/setup-buildx-action@4d04d5d9486b7bd6fa91e7baf45bbb4f8b9deedd
       with:
         driver-opts: network=host
 
     - name: Build and push
-      uses: docker/build-push-action@263435318d21b8e681c14492fe198d362a7d2c83
+      uses: docker/build-push-action@10e90e3645eae34f1e60eeb005ba3a3d33f178e8
       with:
         context: ${{ inputs.context }}
         file: ${{ inputs.dockerfile }}
