@@ -9,13 +9,13 @@ jobs:
     steps:
       - id: version
         name: Get semantic version
-        uses: spritely/actions.semantic-version/get@9030147256b1893f621a45535878d4050b9ad168
+        uses: spritely/actions.semantic-version/get@d4e5cd8da562a5eee0871ff66bb92145dd820020
 
       - name: Run tests
         uses: ./tests
 
       - name: Apply semantic version
         if: ${{ steps.version.outputs.branchName == github.event.repository.default_branch }}
-        uses: spritely/actions.semantic-version/apply@9030147256b1893f621a45535878d4050b9ad168
+        uses: spritely/actions.semantic-version/apply@d4e5cd8da562a5eee0871ff66bb92145dd820020
         with:
           version: ${{ steps.version.outputs.version }}
